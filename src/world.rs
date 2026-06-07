@@ -1,21 +1,30 @@
 use macroquad::prelude::*;
 
+use crate::constants::{HEIGHT, WIDTH};
+use crate::stage::Stage;
+
 pub struct World {
     last_time: f64,
     dt: f32,
+    stage: Stage,
+    // camera maps logical rect (which can be affected by screen dpi) onto physical screen
+    // drawing uses all logical space rect coordinates and camera converts
+    camera: Camera2D,
 }
 
 impl World {
     pub fn new() -> Self {
+        let mut camera = Camera2D::from_display_rect(Rect::new(0.0, 0.0, WIDTH, HEIGHT));
+        // flip it upside down so (0, 0) is top left
+        // and (WIDTH, HEIGHT) is bottom right
+        camera.zoom.y = -camera.zoom.y;
+
         World {
             last_time: get_time(),
             dt: 0.0,
+            stage: Stage::new(),
+            camera,
         }
-    }
-
-    // delta time since previous frame
-    pub fn dt(&self) -> f32 {
-        self.dt
     }
 
     // refresh dt from the time elapsed since the previous frame
@@ -40,11 +49,15 @@ impl World {
     }
 
     // update game state prior to draw
-    fn update(&mut self) {}
+    fn update(&mut self) {
+        self.stage.update(self.dt);
+    }
 
-    /// Render the current frame.
     fn draw(&self) {
+        set_camera(&self.camera);
+
         clear_background(BLACK);
+        self.stage.draw();
     }
 }
 

@@ -1,4 +1,7 @@
 mod constants;
+mod player;
+mod shape;
+mod stage;
 mod world;
 
 use macroquad::prelude::*;
@@ -9,6 +12,10 @@ fn window_conf() -> Conf {
         window_title: "Shaper".to_owned(),
         window_width: constants::WIDTH as i32,
         window_height: constants::HEIGHT as i32,
+        // rendering scaled for high dpi
+        high_dpi: true,
+        // msaa antialiasing
+        sample_count: 4,
         ..Default::default()
     }
 }
