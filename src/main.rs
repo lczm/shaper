@@ -1,4 +1,5 @@
 mod constants;
+mod input;
 mod player;
 mod shape;
 mod stage;

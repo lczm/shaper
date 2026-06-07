@@ -1,6 +1,7 @@
 use macroquad::prelude::*;
 
 use crate::constants::{HEIGHT, WIDTH};
+use crate::input::Input;
 use crate::stage::Stage;
 
 pub struct World {
@@ -50,7 +51,9 @@ impl World {
 
     // update game state prior to draw
     fn update(&mut self) {
-        self.stage.update(self.dt);
+        // gather input here since the World owns the camera (mouse -> world)
+        let input = Input::gather(&self.camera);
+        self.stage.update(self.dt, &input);
     }
 
     fn draw(&self) {

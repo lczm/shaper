@@ -1,6 +1,7 @@
 use macroquad::prelude::*;
 
 use crate::constants::{HEIGHT, WIDTH};
+use crate::input::Input;
 use crate::player::Player;
 
 pub struct Stage {
@@ -14,7 +15,13 @@ impl Stage {
         }
     }
 
-    pub fn update(&mut self, _dt: f32) {}
+    pub fn update(&mut self, dt: f32, input: &Input) {
+        self.player.update(dt, input);
+
+        // todo for when clickable objects are on the screen
+        // get coordiantes via input.mouse.x/y
+        // if input.primary_pressed {}
+    }
 
     pub fn draw(&self) {
         self.player.draw();
