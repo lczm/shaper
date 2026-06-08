@@ -19,11 +19,15 @@ impl Circle {
         }
     }
 
-    pub fn draw(&self, pos: Vec2) {
+    pub fn draw(&self, pos: Vec2, opacity: f32) {
+        let color = Color {
+            a: self.color.a * opacity,
+            ..self.color
+        };
         if self.filled {
-            draw_circle(pos.x, pos.y, self.radius, self.color);
+            draw_circle(pos.x, pos.y, self.radius, color);
         } else {
-            draw_circle_lines(pos.x, pos.y, self.radius, self.thickness, self.color);
+            draw_circle_lines(pos.x, pos.y, self.radius, self.thickness, color);
         }
     }
 }

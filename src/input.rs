@@ -8,7 +8,7 @@ pub struct Input {
     pub arrow_down: bool,
     pub arrow_left: bool,
     pub arrow_right: bool,
-    pub shift: bool,
+    pub shift_pressed: bool,
 
     // mouse and left click
     pub mouse: Vec2,
@@ -16,15 +16,15 @@ pub struct Input {
 }
 
 impl Input {
-    /// Read the current input. `camera` is needed to convert the physical mouse
-    /// pixels back into logical world space (we render with high_dpi).
+    // gather the inputs that the game uses
     pub fn gather(camera: &Camera2D) -> Self {
         Input {
             arrow_up: is_key_down(KeyCode::Up),
             arrow_down: is_key_down(KeyCode::Down),
             arrow_left: is_key_down(KeyCode::Left),
             arrow_right: is_key_down(KeyCode::Right),
-            shift: is_key_down(KeyCode::LeftShift) || is_key_down(KeyCode::RightShift),
+            shift_pressed: is_key_pressed(KeyCode::LeftShift)
+                || is_key_pressed(KeyCode::RightShift),
             mouse: camera.screen_to_world(mouse_position().into()),
             primary_pressed: is_mouse_button_pressed(MouseButton::Left),
         }
