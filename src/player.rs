@@ -76,7 +76,7 @@ impl Player {
                 elapsed: 0.0,
             };
             // change to blue when phasing
-            self.circle.color = BLUE;
+            self.circle.color = ORANGE;
         }
     }
 
