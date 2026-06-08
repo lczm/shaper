@@ -59,7 +59,7 @@ impl World {
     fn draw(&self) {
         set_camera(&self.camera);
 
-        clear_background(GRAY);
+        clear_background(LIGHTGRAY);
         self.stage.draw();
     }
 }

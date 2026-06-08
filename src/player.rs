@@ -1,8 +1,8 @@
 use macroquad::prelude::*;
 
 use crate::constants::{
-    HEIGHT, PHASE_DISTANCE, PHASE_DURATION, PHASE_MIN_OPACITY, PLAYER_CIRCLE_RADIUS, PLAYER_SPEED,
-    WIDTH,
+    HEIGHT, PHASE_DISTANCE, PHASE_DURATION, PHASE_GHOST_OPACITY, PHASE_MIN_OPACITY,
+    PHASE_TRAIL_LENGTH, PLAYER_CIRCLE_RADIUS, PLAYER_SPEED, WIDTH,
 };
 use crate::input::Input;
 use crate::shape::Circle;
@@ -18,6 +18,8 @@ pub struct Player {
     pub position: Vec2,
     pub circle: Circle,
     state: PlayerState,
+    // recent positions (newest first) used to draw the phase ghost trail
+    trail: Vec<Vec2>,
 }
 
 impl Player {
@@ -26,6 +28,7 @@ impl Player {
             position,
             circle: Circle::new(PLAYER_CIRCLE_RADIUS, YELLOW),
             state: PlayerState::Normal,
+            trail: Vec::new(),
         }
     }
 
@@ -53,11 +56,22 @@ impl Player {
     pub fn update(&mut self, dt: f32, input: &Input) {
         let dir = Self::calculate_movement_vector(input);
 
+        // record where we are before moving so the ghost trail sits behind us
+        if matches!(self.state, PlayerState::Phasing { .. }) {
+            self.trail.insert(0, self.position);
+            self.trail.truncate(PHASE_TRAIL_LENGTH);
+        }
+
         match self.state {
             PlayerState::Normal => self.update_player_normal(dt, input, dir),
             PlayerState::Phasing { direction, elapsed } => {
                 self.update_player_phasing(dt, dir, direction, elapsed)
             }
+        }
+
+        // drop the trail once the phase is over
+        if !matches!(self.state, PlayerState::Phasing { .. }) {
+            self.trail.clear();
         }
 
         // keep to within the area
@@ -103,6 +117,14 @@ impl Player {
     // }
 
     pub fn draw(&self) {
+        // ghost trail behind the phase movement: older ghosts fade out
+        let trail_len = self.trail.len() as f32;
+        for (i, &pos) in self.trail.iter().enumerate() {
+            let fade = 1.0 - i as f32 / trail_len;
+            self.circle
+                .draw_colored(pos, GRAY, PHASE_GHOST_OPACITY * fade);
+        }
+
         // fade out then back in over the phase (dips at the midpoint)
         let opacity = match self.state {
             PlayerState::Normal => 1.0,

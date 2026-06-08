@@ -20,9 +20,14 @@ impl Circle {
     }
 
     pub fn draw(&self, pos: Vec2, opacity: f32) {
+        self.draw_colored(pos, self.color, opacity);
+    }
+
+    // draw with a one-off color override (e.g. gray ghost trail)
+    pub fn draw_colored(&self, pos: Vec2, color: Color, opacity: f32) {
         let color = Color {
-            a: self.color.a * opacity,
-            ..self.color
+            a: color.a * opacity,
+            ..color
         };
         if self.filled {
             draw_circle(pos.x, pos.y, self.radius, color);
