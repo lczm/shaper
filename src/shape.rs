@@ -57,27 +57,35 @@ impl Rectangle {
     }
 
     pub fn draw(&self, pos: Vec2, opacity: f32) {
-        self.draw_colored(pos, self.color, opacity);
+        self.draw_rotated(pos, 0.0, opacity);
     }
 
-    // draw with a one-off color override. pos is the center of the rectangle
-    pub fn draw_colored(&self, pos: Vec2, color: Color, opacity: f32) {
+    pub fn draw_rotated(&self, pos: Vec2, rotation: f32, opacity: f32) {
+        self.draw_colored(pos, self.color, rotation, opacity);
+    }
+
+    // draw with a one-off color override
+    pub fn draw_colored(&self, pos: Vec2, color: Color, rotation: f32, opacity: f32) {
         let color = Color {
             a: color.a * opacity,
             ..color
         };
-        // macroquad draws from the top-left corner, so offset from the center
-        let top_left = pos - self.size / 2.0;
+        // offset (0.5, 0.5) makes pos the center and rotation pivot
+        let params = DrawRectangleParams {
+            offset: vec2(0.5, 0.5),
+            rotation,
+            color,
+        };
         if self.filled {
-            draw_rectangle(top_left.x, top_left.y, self.size.x, self.size.y, color);
+            draw_rectangle_ex(pos.x, pos.y, self.size.x, self.size.y, params);
         } else {
-            draw_rectangle_lines(
-                top_left.x,
-                top_left.y,
+            draw_rectangle_lines_ex(
+                pos.x,
+                pos.y,
                 self.size.x,
                 self.size.y,
                 self.thickness,
-                color,
+                params,
             );
         }
     }

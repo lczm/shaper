@@ -13,6 +13,10 @@ pub const PLAYER_SPEED: f32 = 450.0;
 pub const BOSS_WIDTH: f32 = 150.0;
 pub const BOSS_HEIGHT: f32 = 150.0;
 
+// clockwise spin speed in radians per second
+// used when boss is idle
+pub const BOSS_IDLE_ROTATION_SPEED: f32 = 0.8;
+
 pub const PHASE_DISTANCE: f32 = 150.0;
 pub const PHASE_DURATION: f32 = 0.20;
 pub const PHASE_MIN_OPACITY: f32 = 0.1;
