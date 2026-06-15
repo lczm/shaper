@@ -37,8 +37,20 @@ pub const BOSS_WIDTH: f32 = 150.0;
 pub const BOSS_HEIGHT: f32 = 150.0;
 
 // clockwise spin speed in radians per second
-// used when boss is idle
+// used when boss is idle (the steady speed it settles to)
 pub const BOSS_IDLE_ROTATION_SPEED: f32 = 0.8;
+// fastest speed
+pub const BOSS_SPINUP_PEAK_SPEED: f32 = 12.0;
+// slow -> fast for this many seconds
+pub const BOSS_SPINUP_RAMP_UP: f32 = 0.8;
+// hold atp eak for how long
+pub const BOSS_SPINUP_HOLD: f32 = 1.0;
+// easing down for this many seconds
+pub const BOSS_SPINUP_RAMP_DOWN: f32 = 1.5;
+// total duration
+pub const BOSS_SPINUP_DURATION: f32 =
+    BOSS_SPINUP_RAMP_UP + BOSS_SPINUP_HOLD + BOSS_SPINUP_RAMP_DOWN;
+
 // seconds between shots while the boss is idle
 pub const BOSS_FIRE_INTERVAL: f32 = 0.5;
 // number of projectiles in each all-directions burst

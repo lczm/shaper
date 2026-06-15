@@ -7,6 +7,7 @@ mod projectile;
 mod shape;
 mod state;
 mod ui;
+mod utils;
 mod world;
 
 use macroquad::prelude::*;
