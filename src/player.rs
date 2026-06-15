@@ -1,8 +1,8 @@
 use macroquad::prelude::*;
 
 use crate::constants::{
-    HEIGHT, PHASE_DISTANCE, PHASE_DURATION, PHASE_GHOST_OPACITY, PHASE_MIN_OPACITY,
-    PHASE_TRAIL_LENGTH, PLAYER_CIRCLE_RADIUS, PLAYER_SPEED, WIDTH,
+    ARENA_BORDER_THICKNESS, PHASE_DISTANCE, PHASE_DURATION, PHASE_GHOST_OPACITY, PHASE_MIN_OPACITY,
+    PHASE_TRAIL_LENGTH, PLAYER_CIRCLE_RADIUS, PLAYER_SPEED,
 };
 use crate::input::Input;
 use crate::shape::Circle;
@@ -53,7 +53,7 @@ impl Player {
         direction
     }
 
-    pub fn update(&mut self, dt: f32, input: &Input) {
+    pub fn update(&mut self, dt: f32, input: &Input, bounds: Rect) {
         let dir = Self::calculate_movement_vector(input);
 
         // record where we are before moving so the ghost trail sits behind us
@@ -74,10 +74,19 @@ impl Player {
             self.trail.clear();
         }
 
-        // keep to within the area
-        let radius = self.circle.radius;
-        self.position.x = self.position.x.clamp(radius, WIDTH - radius);
-        self.position.y = self.position.y.clamp(radius, HEIGHT - radius);
+        // get the total inset from the bounds edge to the center of the player circle
+        let inset =
+            self.circle.radius + self.circle.thickness / 2.0 + ARENA_BORDER_THICKNESS / 2.0;
+
+        // clamp player position within the arena
+        self.position.x = self
+            .position
+            .x
+            .clamp(bounds.x + inset, bounds.x + bounds.w - inset);
+        self.position.y = self
+            .position
+            .y
+            .clamp(bounds.y + inset, bounds.y + bounds.h - inset);
     }
 
     fn update_player_normal(&mut self, dt: f32, input: &Input, dir: Vec2) {
