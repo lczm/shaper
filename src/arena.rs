@@ -1,7 +1,9 @@
 use macroquad::prelude::*;
 
 use crate::boss::Boss;
-use crate::constants::{ARENA_BORDER_THICKNESS, ARENA_MARGIN_HEIGHT, ARENA_MARGIN_WIDTH, HEIGHT};
+use crate::constants::{
+    ARENA_BORDER_COLOR, ARENA_BORDER_THICKNESS, ARENA_MARGIN_HEIGHT, ARENA_MARGIN_WIDTH, HEIGHT,
+};
 use crate::input::Input;
 use crate::player::Player;
 use crate::state::GameState;
@@ -70,7 +72,7 @@ impl Arena {
             self.bounds.w,
             self.bounds.h,
             ARENA_BORDER_THICKNESS,
-            BLUE,
+            ARENA_BORDER_COLOR,
         );
     }
 }

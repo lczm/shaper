@@ -3,8 +3,22 @@ use macroquad::prelude::*;
 pub const WIDTH: f32 = 1280.0;
 pub const HEIGHT: f32 = 800.0;
 
-// arena background; the boss mask matches this so projectiles hide under it
-pub const BACKGROUND: Color = LIGHTGRAY;
+// color scheme
+pub const BACKGROUND: Color = Color::new(0.06, 0.07, 0.11, 1.0); // near-black navy
+pub const ARENA_BORDER_COLOR: Color = Color::new(0.42, 0.44, 0.72, 1.0); // soft indigo frame
+
+// player colors
+pub const PLAYER_COLOR: Color = Color::new(0.25, 0.92, 0.85, 1.0); // cyan
+pub const PLAYER_PHASING_COLOR: Color = Color::new(0.85, 1.0, 1.0, 1.0); // pale ghost cyan
+pub const PLAYER_PROJECTILE_COLOR: Color = Color::new(0.55, 0.95, 1.0, 1.0); // light cyan
+pub const PLAYER_TRAIL_COLOR: Color = Color::new(0.45, 0.85, 0.85, 1.0); // dim cyan
+
+// boss colors
+pub const BOSS_COLOR: Color = Color::new(0.96, 0.28, 0.55, 1.0); // hot magenta-pink
+pub const BOSS_PROJECTILE_COLOR: Color = Color::new(1.0, 0.45, 0.30, 1.0); // warm coral
+
+// hud colors
+pub const UI_TEXT_COLOR: Color = Color::new(0.90, 0.92, 0.96, 1.0); // soft off-white
 
 // gap from left window edge to arena border
 pub const ARENA_MARGIN_WIDTH: f32 = 80.0;

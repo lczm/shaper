@@ -2,8 +2,9 @@ use macroquad::prelude::*;
 
 use crate::constants::{
     ARENA_BORDER_THICKNESS, PHASE_DISTANCE, PHASE_DURATION, PHASE_GHOST_OPACITY, PHASE_MIN_OPACITY,
-    PHASE_TRAIL_LENGTH, PLAYER_CIRCLE_RADIUS, PLAYER_FIRE_INTERVAL, PLAYER_PROJECTILE_SPEED,
-    PLAYER_SPEED,
+    PHASE_TRAIL_LENGTH, PLAYER_CIRCLE_RADIUS, PLAYER_COLOR, PLAYER_FIRE_INTERVAL,
+    PLAYER_PHASING_COLOR, PLAYER_PROJECTILE_COLOR, PLAYER_PROJECTILE_SPEED, PLAYER_SPEED,
+    PLAYER_TRAIL_COLOR,
 };
 use crate::input::Input;
 use crate::projectile::{Projectile, ProjectileKind};
@@ -31,7 +32,7 @@ impl Player {
     pub fn new(position: Vec2) -> Self {
         Player {
             position,
-            circle: Circle::new(PLAYER_CIRCLE_RADIUS, YELLOW),
+            circle: Circle::new(PLAYER_CIRCLE_RADIUS, PLAYER_COLOR),
             state: PlayerState::Normal,
             trail: Vec::new(),
             fire_timer: 0.0,
@@ -108,7 +109,7 @@ impl Player {
                 self.position,
                 vec2(0.0, -PLAYER_PROJECTILE_SPEED),
                 ProjectileKind::Player,
-                SKYBLUE,
+                PLAYER_PROJECTILE_COLOR,
             ));
         }
     }
@@ -122,8 +123,8 @@ impl Player {
                 direction: dir,
                 elapsed: 0.0,
             };
-            // change to blue when phasing
-            self.circle.color = ORANGE;
+            // pale ghost tint while phasing
+            self.circle.color = PLAYER_PHASING_COLOR;
         }
     }
 
@@ -138,7 +139,7 @@ impl Player {
         elapsed += dt;
         if elapsed >= PHASE_DURATION {
             self.state = PlayerState::Normal;
-            self.circle.color = YELLOW;
+            self.circle.color = PLAYER_COLOR;
         } else {
             self.state = PlayerState::Phasing { direction, elapsed };
         }
@@ -155,7 +156,7 @@ impl Player {
         for (i, &pos) in self.trail.iter().enumerate() {
             let fade = 1.0 - i as f32 / trail_len;
             self.circle
-                .draw_colored(pos, GRAY, PHASE_GHOST_OPACITY * fade);
+                .draw_colored(pos, PLAYER_TRAIL_COLOR, PHASE_GHOST_OPACITY * fade);
         }
 
         // fade out then back in over the phase (dips at the midpoint)

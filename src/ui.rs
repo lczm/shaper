@@ -1,5 +1,6 @@
 use macroquad::prelude::*;
 
+use crate::constants::UI_TEXT_COLOR;
 use crate::state::GameState;
 
 pub struct Ui;
@@ -15,7 +16,7 @@ impl Ui {
 
         let x = bounds.right() + 40.0;
         let y = bounds.y + 40.0;
-        draw_text(format!("Lives: {}", state.lives), x, y, 32.0, BLACK);
+        draw_text(format!("Lives: {}", state.lives), x, y, 32.0, UI_TEXT_COLOR);
     }
 }
 

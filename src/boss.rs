@@ -1,8 +1,8 @@
 use macroquad::prelude::*;
 
 use crate::constants::{
-    BACKGROUND, BOSS_FIRE_INTERVAL, BOSS_HEIGHT, BOSS_IDLE_ROTATION_SPEED, BOSS_PROJECTILE_COUNT,
-    BOSS_WIDTH, PROJECTILE_SPEED,
+    BACKGROUND, BOSS_COLOR, BOSS_FIRE_INTERVAL, BOSS_HEIGHT, BOSS_IDLE_ROTATION_SPEED,
+    BOSS_PROJECTILE_COLOR, BOSS_PROJECTILE_COUNT, BOSS_WIDTH, PROJECTILE_SPEED,
 };
 use crate::projectile::{Projectile, ProjectileKind};
 use crate::shape::Rectangle;
@@ -40,7 +40,7 @@ pub struct Boss {
 
 impl Boss {
     pub fn new(position: Vec2) -> Self {
-        let mut rect = Rectangle::new(vec2(BOSS_WIDTH, BOSS_HEIGHT), RED);
+        let mut rect = Rectangle::new(vec2(BOSS_WIDTH, BOSS_HEIGHT), BOSS_COLOR);
         rect.filled = false;
         // the mask is the same size as the rect but filled with the background color, so
         // the projectiles under the boss wont be visible
@@ -84,7 +84,7 @@ impl Boss {
                 self.position,
                 dir * PROJECTILE_SPEED,
                 ProjectileKind::Boss,
-                RED,
+                BOSS_PROJECTILE_COLOR,
             ));
         }
     }
