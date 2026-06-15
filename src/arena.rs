@@ -1,50 +1,32 @@
 use macroquad::prelude::*;
 
-use crate::constants::{
-    ARENA_BORDER_THICKNESS, ARENA_MARGIN_HEIGHT, ARENA_MARGIN_WIDTH, HEIGHT, WIDTH,
-};
+use crate::boss::Boss;
+use crate::constants::{ARENA_BORDER_THICKNESS, ARENA_MARGIN_HEIGHT, ARENA_MARGIN_WIDTH, HEIGHT};
 use crate::input::Input;
-use crate::stage::Stage;
+use crate::player::Player;
 use crate::state::GameState;
 
-// the bounded arena
+// the gameplay arena and everything inside it
 pub struct Arena {
-    last_time: f64,
-    dt: f32,
-    stage: Stage,
-    // camera maps logical rect (which can be affected by screen dpi) onto physical screen
-    // drawing uses all logical space rect coordinates and camera converts
-    camera: Camera2D,
-    // rectangular border that bounds gameplay; the player can't leave it
     bounds: Rect,
+    player: Player,
+    boss: Boss,
 }
 
 impl Arena {
     pub fn new() -> Self {
-        let mut camera = Camera2D::from_display_rect(Rect::new(0.0, 0.0, WIDTH, HEIGHT));
-        // flip it upside down so (0, 0) is top left
-        // and (WIDTH, HEIGHT) is bottom right
-        camera.zoom.y = -camera.zoom.y;
-
-        // offset the arena by some margin
+        // offset the arena by some margin; portrait 3:4 rect anchored top-left
         let height = HEIGHT - 2.0 * ARENA_MARGIN_HEIGHT;
         let width = height * 3.0 / 4.0;
         let bounds = Rect::new(ARENA_MARGIN_WIDTH, ARENA_MARGIN_HEIGHT, width, height);
 
+        let center_x = bounds.x + bounds.w / 2.0;
         Arena {
-            last_time: get_time(),
-            dt: 0.0,
-            stage: Stage::new(bounds),
-            camera,
             bounds,
+            // player near the bottom-center, boss near the top-center
+            player: Player::new(vec2(center_x, bounds.y + bounds.h * 4.0 / 5.0)),
+            boss: Boss::new(vec2(center_x, bounds.y + bounds.h / 5.0)),
         }
-    }
-
-    // refresh dt from the time elapsed since the previous frame
-    fn compute_dt(&mut self) {
-        let now = get_time();
-        self.dt = (now - self.last_time) as f32;
-        self.last_time = now;
     }
 
     // the rectangular gameplay border, in logical coordinates
@@ -52,19 +34,18 @@ impl Arena {
         self.bounds
     }
 
-    // update game state prior to draw
-    pub fn update(&mut self, state: &mut GameState) {
-        self.compute_dt();
-        // gather input here since the arena owns the camera (mouse -> world)
-        let input = Input::gather(&self.camera);
-        self.stage.update(self.dt, &input, self.bounds, state);
+    pub fn update(&mut self, dt: f32, input: &Input, state: &mut GameState) {
+        self.player.update(dt, input, self.bounds);
+        self.boss.update(dt);
+
+        // TODO : gameplay state
+        // collisions etc
+        let _ = state;
     }
 
     pub fn draw(&self) {
-        set_camera(&self.camera);
-
-        clear_background(LIGHTGRAY);
-        self.stage.draw();
+        self.player.draw();
+        self.boss.draw();
         self.draw_border();
     }
 

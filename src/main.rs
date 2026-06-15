@@ -1,9 +1,9 @@
 mod arena;
+mod boss;
 mod constants;
 mod input;
 mod player;
 mod shape;
-mod stage;
 mod state;
 mod ui;
 mod world;
