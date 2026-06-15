@@ -36,14 +36,28 @@ impl Arena {
 
     pub fn update(&mut self, dt: f32, input: &Input, state: &mut GameState) {
         self.player.update(dt, input, self.bounds);
-        self.boss.update(dt);
+
+        // boss may push some projectiles into the game state
+        self.boss.update(dt, state);
+
+        // update projectile movements
+        for projectile in &mut state.projectiles {
+            projectile.update(dt);
+        }
+
+        // drop any projectiles that have left the arena
+        let bounds = self.bounds;
+        state.projectiles.retain(|p| !p.is_off_screen(bounds));
 
         // TODO : gameplay state
         // collisions etc
-        let _ = state;
     }
 
-    pub fn draw(&self) {
+    pub fn draw(&self, state: &GameState) {
+        // projectiles first so the boss draws on top and hides any under it
+        for projectile in &state.projectiles {
+            projectile.draw();
+        }
         self.player.draw();
         self.boss.draw();
         self.draw_border();

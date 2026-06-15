@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
 
 use crate::arena::Arena;
-use crate::constants::{HEIGHT, WIDTH};
+use crate::constants::{BACKGROUND, HEIGHT, WIDTH};
 use crate::input::Input;
 use crate::state::GameState;
 use crate::ui::Ui;
@@ -61,9 +61,9 @@ impl World {
 
     fn draw(&self) {
         set_camera(&self.camera);
-        clear_background(LIGHTGRAY);
+        clear_background(BACKGROUND);
 
-        self.arena.draw();
+        self.arena.draw(&self.state);
 
         self.ui.draw(&self.state, self.arena.bounds());
     }

@@ -3,6 +3,7 @@ mod boss;
 mod constants;
 mod input;
 mod player;
+mod projectile;
 mod shape;
 mod state;
 mod ui;
