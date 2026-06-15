@@ -35,7 +35,7 @@ impl Arena {
     }
 
     pub fn update(&mut self, dt: f32, input: &Input, state: &mut GameState) {
-        self.player.update(dt, input, self.bounds);
+        self.player.update(dt, input, self.bounds, state);
 
         // boss may push some projectiles into the game state
         self.boss.update(dt, state);

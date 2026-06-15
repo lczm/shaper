@@ -3,20 +3,31 @@ use macroquad::prelude::*;
 use crate::constants::{ARENA_BORDER_THICKNESS, PROJECTILE_RADIUS};
 use crate::shape::Circle;
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum ProjectileKind {
+    Boss,
+    Player,
+}
+
 pub struct Projectile {
     pub position: Vec2,
     velocity: Vec2,
     circle: Circle,
+    color: Color,
+    // TODO: to be used by collision checking
+    pub kind: ProjectileKind,
 }
 
 impl Projectile {
-    pub fn new(position: Vec2, velocity: Vec2) -> Self {
-        let mut circle = Circle::new(PROJECTILE_RADIUS, RED);
+    pub fn new(position: Vec2, velocity: Vec2, kind: ProjectileKind, color: Color) -> Self {
+        let mut circle = Circle::new(PROJECTILE_RADIUS, color);
         circle.filled = true;
         Projectile {
             position,
             velocity,
             circle,
+            color,
+            kind,
         }
     }
 
@@ -36,6 +47,6 @@ impl Projectile {
     }
 
     pub fn draw(&self) {
-        self.circle.draw(self.position, 1.0);
+        self.circle.draw_colored(self.position, self.color, 1.0);
     }
 }

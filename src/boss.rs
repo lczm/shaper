@@ -4,7 +4,7 @@ use crate::constants::{
     BACKGROUND, BOSS_FIRE_INTERVAL, BOSS_HEIGHT, BOSS_IDLE_ROTATION_SPEED, BOSS_PROJECTILE_COUNT,
     BOSS_WIDTH, PROJECTILE_SPEED,
 };
-use crate::projectile::Projectile;
+use crate::projectile::{Projectile, ProjectileKind};
 use crate::shape::Rectangle;
 use crate::state::GameState;
 
@@ -80,9 +80,12 @@ impl Boss {
             // angles in (0, PI) all point downward (+y under the y-down camera)
             let angle = std::f32::consts::PI * (i as f32 + 0.5) / BOSS_PROJECTILE_COUNT as f32;
             let dir = vec2(angle.cos(), angle.sin());
-            state
-                .projectiles
-                .push(Projectile::new(self.position, dir * PROJECTILE_SPEED));
+            state.projectiles.push(Projectile::new(
+                self.position,
+                dir * PROJECTILE_SPEED,
+                ProjectileKind::Boss,
+                RED,
+            ));
         }
     }
 

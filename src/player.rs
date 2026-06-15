@@ -2,10 +2,13 @@ use macroquad::prelude::*;
 
 use crate::constants::{
     ARENA_BORDER_THICKNESS, PHASE_DISTANCE, PHASE_DURATION, PHASE_GHOST_OPACITY, PHASE_MIN_OPACITY,
-    PHASE_TRAIL_LENGTH, PLAYER_CIRCLE_RADIUS, PLAYER_SPEED,
+    PHASE_TRAIL_LENGTH, PLAYER_CIRCLE_RADIUS, PLAYER_FIRE_INTERVAL, PLAYER_PROJECTILE_SPEED,
+    PLAYER_SPEED,
 };
 use crate::input::Input;
+use crate::projectile::{Projectile, ProjectileKind};
 use crate::shape::Circle;
+use crate::state::GameState;
 
 #[derive(Clone, Copy)]
 enum PlayerState {
@@ -20,6 +23,8 @@ pub struct Player {
     state: PlayerState,
     // recent positions (newest first) used to draw the phase ghost trail
     trail: Vec<Vec2>,
+    // counts down to the next shot
+    fire_timer: f32,
 }
 
 impl Player {
@@ -29,6 +34,7 @@ impl Player {
             circle: Circle::new(PLAYER_CIRCLE_RADIUS, YELLOW),
             state: PlayerState::Normal,
             trail: Vec::new(),
+            fire_timer: 0.0,
         }
     }
 
@@ -53,7 +59,7 @@ impl Player {
         direction
     }
 
-    pub fn update(&mut self, dt: f32, input: &Input, bounds: Rect) {
+    pub fn update(&mut self, dt: f32, input: &Input, bounds: Rect, state: &mut GameState) {
         let dir = Self::calculate_movement_vector(input);
 
         // record where we are before moving so the ghost trail sits behind us
@@ -87,6 +93,24 @@ impl Player {
             .position
             .y
             .clamp(bounds.y + inset, bounds.y + bounds.h - inset);
+
+        self.fire(dt, state);
+    }
+
+    // continuously shoot straight up on a fixed cadence
+    fn fire(&mut self, dt: f32, state: &mut GameState) {
+        if self.fire_timer > 0.0 {
+            self.fire_timer -= dt;
+        }
+        if self.fire_timer <= 0.0 {
+            self.fire_timer = PLAYER_FIRE_INTERVAL;
+            state.projectiles.push(Projectile::new(
+                self.position,
+                vec2(0.0, -PLAYER_PROJECTILE_SPEED),
+                ProjectileKind::Player,
+                SKYBLUE,
+            ));
+        }
     }
 
     fn update_player_normal(&mut self, dt: f32, input: &Input, dir: Vec2) {
