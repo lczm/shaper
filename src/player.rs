@@ -61,6 +61,13 @@ impl Player {
     }
 
     pub fn update(&mut self, dt: f32, input: &Input, bounds: Rect, state: &mut GameState) {
+        // TODO : bomb effect, probably do some clearing of enemy projectiles
+        // + some iframes for some time
+        if input.z_pressed {
+            state.bombs = state.bombs.saturating_sub(1);
+            todo!("bomb effect not implemented yet");
+        }
+
         let dir = Self::calculate_movement_vector(input);
 
         // record where we are before moving so the ghost trail sits behind us
@@ -82,8 +89,7 @@ impl Player {
         }
 
         // get the total inset from the bounds edge to the center of the player circle
-        let inset =
-            self.circle.radius + self.circle.thickness / 2.0 + ARENA_BORDER_THICKNESS / 2.0;
+        let inset = self.circle.radius + self.circle.thickness / 2.0 + ARENA_BORDER_THICKNESS / 2.0;
 
         // clamp player position within the arena
         self.position.x = self
