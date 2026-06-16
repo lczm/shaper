@@ -1,5 +1,6 @@
 mod arena;
 mod boss;
+mod collision;
 mod constants;
 mod dev_ui;
 mod input;

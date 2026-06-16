@@ -134,6 +134,11 @@ impl Boss {
         }
     }
 
+    // current orientation in radians (used by collision checks)
+    pub fn rotation(&self) -> f32 {
+        self.rotation
+    }
+
     pub fn draw(&self) {
         // draw the mask first then the boss
         self.mask.draw_rotated(self.position, self.rotation, 1.0);

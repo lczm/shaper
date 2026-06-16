@@ -151,10 +151,10 @@ impl Player {
         }
     }
 
-    // true during the phase i-frame window (for future collision checks)
-    // pub fn is_invulnerable(&self) -> bool {
-    //     matches!(self.state, PlayerState::Phasing { .. })
-    // }
+    // true during the phase i-frame window
+    pub fn is_invulnerable(&self) -> bool {
+        matches!(self.state, PlayerState::Phasing { .. })
+    }
 
     pub fn draw(&self) {
         // ghost trail behind the phase movement: older ghosts fade out

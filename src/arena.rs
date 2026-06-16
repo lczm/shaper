@@ -51,8 +51,8 @@ impl Arena {
         let bounds = self.bounds;
         state.projectiles.retain(|p| !p.is_off_screen(bounds));
 
-        // TODO : gameplay state
-        // collisions etc
+        // handle collisions after all movement is done
+        crate::collision::handle_collisions(state, &self.player, &self.boss);
     }
 
     pub fn draw(&self, state: &GameState) {
