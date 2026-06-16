@@ -2,6 +2,7 @@ use macroquad::prelude::*;
 
 use crate::arena::Arena;
 use crate::constants::{BACKGROUND, HEIGHT, WIDTH};
+use crate::dev_ui;
 use crate::input::Input;
 use crate::state::GameState;
 use crate::ui::Ui;
@@ -17,6 +18,8 @@ pub struct World {
     arena: Arena,
     state: GameState,
     ui: Ui,
+    // egui debug window, toggled with spacebar
+    dev_ui: bool,
 }
 
 impl World {
@@ -33,6 +36,7 @@ impl World {
             arena: Arena::new(),
             state: GameState::new(),
             ui: Ui::new(),
+            dev_ui: false,
         }
     }
 
@@ -54,6 +58,10 @@ impl World {
 
     fn update(&mut self) {
         self.compute_dt();
+        if is_key_pressed(KeyCode::Space) {
+            self.dev_ui = !self.dev_ui;
+        }
+
         // gather input here since World owns the camera (mouse -> world)
         let input = Input::gather(&self.camera);
         self.arena.update(self.dt, &input, &mut self.state);
@@ -66,6 +74,11 @@ impl World {
         self.arena.draw(&self.state);
 
         self.ui.draw(&self.state, self.arena.bounds());
+
+        // always render dev ui on top of everything else
+        if self.dev_ui {
+            dev_ui::draw(&self.state);
+        }
     }
 }
 
