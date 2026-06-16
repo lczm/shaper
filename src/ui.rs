@@ -15,8 +15,11 @@ impl Ui {
         set_default_camera();
 
         let x = bounds.right() + 40.0;
-        let y = bounds.y + 40.0;
+        let mut y = bounds.y + 40.0;
         draw_text(format!("Lives: {}", state.lives), x, y, 32.0, UI_TEXT_COLOR);
+
+        y += 40.0;
+        draw_text(format!("Bombs: {}", state.bombs), x, y, 32.0, UI_TEXT_COLOR);
     }
 }
 

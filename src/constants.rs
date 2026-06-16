@@ -68,3 +68,4 @@ pub const PHASE_GHOST_OPACITY: f32 = 0.2; // opacity of the freshest ghost
 
 // initial game state
 pub const STARTING_LIVES: u32 = 3;
+pub const STARTING_BOMBS: u32 = 3;
