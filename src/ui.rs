@@ -1,8 +1,8 @@
 use macroquad::prelude::*;
 
 use crate::constants::{
-    ARENA_BORDER_COLOR, HEALTH_BAR_BG_COLOR, HEALTH_BAR_FILL_COLOR, HEALTH_BAR_HEIGHT,
-    HEALTH_BAR_TOP_MARGIN, UI_TEXT_COLOR,
+    ARENA_BORDER_COLOR, HEALTH_BAR_BG_COLOR, HEALTH_BAR_CHIP_COLOR, HEALTH_BAR_FILL_COLOR,
+    HEALTH_BAR_HEIGHT, HEALTH_BAR_TOP_MARGIN, UI_TEXT_COLOR,
 };
 use crate::state::GameState;
 
@@ -13,12 +13,18 @@ impl Ui {
         Ui
     }
 
-    pub fn draw(&self, state: &GameState, bounds: Rect, boss_health: (i32, i32)) {
+    pub fn draw(
+        &self,
+        state: &GameState,
+        bounds: Rect,
+        boss_health: (i32, i32),
+        boss_displayed: f32,
+    ) {
         // use screen space camera
         set_default_camera();
 
         // boss health bar across the top, aligned over the arena
-        self.draw_boss_health(bounds, boss_health.0, boss_health.1);
+        self.draw_boss_health(bounds, boss_health.0, boss_health.1, boss_displayed);
 
         let x = bounds.right() + 40.0;
         let mut y = bounds.y + 40.0;
@@ -28,22 +34,40 @@ impl Ui {
         draw_text(format!("Bombs: {}", state.bombs), x, y, 32.0, UI_TEXT_COLOR);
     }
 
-    fn draw_boss_health(&self, bounds: Rect, current: i32, total: i32) {
+    fn draw_boss_health(&self, bounds: Rect, current: i32, total: i32, displayed: f32) {
         let x = bounds.x;
         let w = bounds.w;
         let y = HEALTH_BAR_TOP_MARGIN;
         let h = HEALTH_BAR_HEIGHT;
 
+        // red snaps to the current health, chip trails behind at the displayed health
+        let frac = |v: f32| {
+            if total > 0 {
+                (v / total as f32).clamp(0.0, 1.0)
+            } else {
+                0.0
+            }
+        };
+        let cur_frac = frac(current as f32);
+        let chip_frac = frac(displayed).max(cur_frac);
+
         // empty track underneath
         draw_rectangle(x, y, w, h, HEALTH_BAR_BG_COLOR);
 
+        // pale chip over the just-removed health, draining down to the red fill
+        if chip_frac > cur_frac {
+            let chip_x = x + w * cur_frac;
+            draw_rectangle(
+                chip_x,
+                y,
+                w * (chip_frac - cur_frac),
+                h,
+                HEALTH_BAR_CHIP_COLOR,
+            );
+        }
+
         // red fill, width scaled by the remaining health fraction
-        let frac = if total > 0 {
-            (current as f32 / total as f32).clamp(0.0, 1.0)
-        } else {
-            0.0
-        };
-        draw_rectangle(x, y, w * frac, h, HEALTH_BAR_FILL_COLOR);
+        draw_rectangle(x, y, w * cur_frac, h, HEALTH_BAR_FILL_COLOR);
 
         // outline on top of the fill
         draw_rectangle_lines(x, y, w, h, 2.0, ARENA_BORDER_COLOR);

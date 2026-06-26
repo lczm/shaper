@@ -104,3 +104,6 @@ pub const HEALTH_BAR_TOP_MARGIN: f32 = 8.0;
 pub const HEALTH_BAR_BG_COLOR: Color = Color::new(0.15, 0.16, 0.22, 0.9);
 // current health colour
 pub const HEALTH_BAR_FILL_COLOR: Color = Color::new(0.90, 0.20, 0.25, 1.0);
+// animated chip colour
+pub const HEALTH_BAR_CHIP_COLOR: Color = Color::new(0.98, 0.90, 0.65, 1.0);
+pub const HEALTH_BAR_DROP_SPEED: f32 = 9.0;

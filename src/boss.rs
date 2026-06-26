@@ -4,7 +4,7 @@ use crate::constants::{
     BACKGROUND, BOSS_COLOR, BOSS_FIRE_INTERVAL, BOSS_HEIGHT, BOSS_IDLE_ROTATION_SPEED,
     BOSS_PROJECTILE_COLOR, BOSS_PROJECTILE_COUNT, BOSS_SPINUP_DURATION, BOSS_SPINUP_HOLD,
     BOSS_SPINUP_PEAK_SPEED, BOSS_SPINUP_RAMP_DOWN, BOSS_SPINUP_RAMP_UP, BOSS_WIDTH,
-    PROJECTILE_SPEED,
+    HEALTH_BAR_DROP_SPEED, PROJECTILE_SPEED,
 };
 use crate::projectile::{BeamProjectile, BulletProjectile, Projectile, ProjectileKind};
 use crate::shape::Rectangle;
@@ -55,6 +55,8 @@ pub struct Boss {
     // boss health
     current_health: i32,
     total_health: i32,
+    // displayed is the trailing chip value
+    displayed_health: f32,
 }
 
 impl Boss {
@@ -72,11 +74,15 @@ impl Boss {
             rotation: 0.0,
             current_health: 1000,
             total_health: 1000,
+            displayed_health: 1000.0,
         }
     }
 
     // match state and delegate to the appropriate update function
     pub fn update(&mut self, dt: f32, state: &mut GameState, bounds: Rect) {
+        // ease damage to current health
+        self.update_displayed_health(dt);
+
         match self.state {
             BossState::Init(init) => self.update_init(dt, init, state, bounds),
             BossState::Idle(idle) => self.update_idle(dt, idle, state),
@@ -162,6 +168,22 @@ impl Boss {
     // (current, total) health, used to draw the boss health bar
     pub fn health(&self) -> (i32, i32) {
         (self.current_health, self.total_health)
+    }
+
+    // the trailing chip value while the drop is animating
+    pub fn displayed_health(&self) -> f32 {
+        self.displayed_health
+    }
+
+    // chip drains smoothly towards current health
+    fn update_displayed_health(&mut self, dt: f32) {
+        let target = self.current_health as f32;
+        let t = 1.0 - (-HEALTH_BAR_DROP_SPEED * dt).exp();
+        self.displayed_health += (target - self.displayed_health) * t;
+        // snap the last sliver so the chip doesn't linger forever
+        if (self.displayed_health - target).abs() < 0.5 {
+            self.displayed_health = target;
+        }
     }
 
     pub fn take_damage(&mut self, damage: i32) {

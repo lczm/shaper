@@ -47,6 +47,11 @@ impl Arena {
         self.boss.health()
     }
 
+    // trailing chip value
+    pub fn boss_displayed_health(&self) -> f32 {
+        self.boss.displayed_health()
+    }
+
     pub fn player_damage(&self) -> i32 {
         self.player.damage()
     }
