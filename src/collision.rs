@@ -50,6 +50,7 @@ pub fn handle_collisions(state: &mut GameState, player: &Player, boss: &Boss) {
 
     // a hit costs at most one life per frame; the i-frame window does the rest
     let mut player_hit = false;
+    let mut boss_hit = false;
     state.projectiles.retain(|p| match p {
         // deal with bullet projectiles
         Projectile::Bullet(b) => match b.kind {
@@ -65,8 +66,8 @@ pub fn handle_collisions(state: &mut GameState, player: &Player, boss: &Boss) {
                 }
             }
             // player bullet hits the boss: just consume it for now
-            // TODO : add boss health and damage later
             ProjectileKind::Player => {
+                boss_hit = true;
                 !circle_box_overlap(b.position, PROJECTILE_RADIUS, boss_pos, boss_half, boss_rot)
             }
         },
@@ -91,5 +92,8 @@ pub fn handle_collisions(state: &mut GameState, player: &Player, boss: &Boss) {
 
     if player_hit {
         state.events.push(GameEvent::PlayerHit);
+    }
+    if boss_hit {
+        state.events.push(GameEvent::BossHit);
     }
 }
