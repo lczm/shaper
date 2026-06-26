@@ -124,7 +124,7 @@ impl World {
 
         // always render dev ui on top of everything else
         if self.dev_ui {
-            dev_ui::draw(&self.state);
+            dev_ui::draw(&self.state, &self.arena);
         }
     }
 }

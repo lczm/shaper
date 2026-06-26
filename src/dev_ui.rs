@@ -1,12 +1,13 @@
 use egui_macroquad::egui;
 
+use crate::arena::Arena;
 use crate::projectile::{Projectile, ProjectileKind};
 use crate::state::GameState;
 
 // scale to make it bigger
 const DEV_UI_SCALE: f32 = 2.0;
 
-pub fn draw(state: &GameState) {
+pub fn draw(state: &GameState, arena: &Arena) {
     egui_macroquad::ui(|ctx| {
         ctx.set_pixels_per_point(DEV_UI_SCALE);
 
@@ -14,7 +15,14 @@ pub fn draw(state: &GameState) {
             .anchor(egui::Align2::RIGHT_TOP, egui::vec2(-10.0, 10.0))
             .default_width(240.0)
             .show(ctx, |ui| {
+                let (boss_current, boss_total) = arena.boss_health();
+                ui.label(format!("boss hp: {boss_current} / {boss_total}"));
+                ui.separator();
+
+                let player_damage = arena.player_damage();
                 ui.label(format!("lives: {}", state.lives));
+                ui.label(format!("damage: {player_damage}"));
+                ui.label(format!("bombs: {}", state.bombs));
                 ui.separator();
 
                 let total = state.projectiles.len();
