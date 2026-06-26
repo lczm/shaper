@@ -47,7 +47,8 @@ pub fn handle_collisions(
     events: &mut Vec<GameEvent>,
 ) {
     // pull out what the retain closure needs so it doesn't borrow `player`
-    let invulnerable = player.is_invulnerable();
+    let player_invulnerable = player.is_invulnerable();
+    let boss_invulnerable = boss.is_invulnerable();
     let player_pos = player.position;
     let player_r = player.circle.radius;
     let boss_pos = boss.position;
@@ -62,7 +63,7 @@ pub fn handle_collisions(
         Projectile::Bullet(b) => match b.kind {
             // boss bullet hits the player: lose a life unless i-framed, consume the bullet
             ProjectileKind::Boss => {
-                if !invulnerable
+                if !player_invulnerable
                     && circle_circle_overlap(b.position, PROJECTILE_RADIUS, player_pos, player_r)
                 {
                     player_hit = true;
@@ -73,7 +74,14 @@ pub fn handle_collisions(
             }
             // player bullet hits the boss: deal its damage and consume it
             ProjectileKind::Player { damage } => {
-                if circle_box_overlap(b.position, PROJECTILE_RADIUS, boss_pos, boss_half, boss_rot)
+                if !boss_invulnerable
+                    && circle_box_overlap(
+                        b.position,
+                        PROJECTILE_RADIUS,
+                        boss_pos,
+                        boss_half,
+                        boss_rot,
+                    )
                 {
                     boss_damage += damage;
                     false
@@ -85,7 +93,7 @@ pub fn handle_collisions(
         // beam hits the player: only once fully activated (the telegraph is harmless), and
         // unless i-framed. the beam persists either way.
         Projectile::Beam(beam) => {
-            if !invulnerable
+            if !player_invulnerable
                 && beam.is_active()
                 && segment_circle_overlap(
                     beam.start,

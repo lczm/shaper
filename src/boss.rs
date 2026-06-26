@@ -198,6 +198,10 @@ impl Boss {
         self.displayed_health
     }
 
+    pub fn is_invulnerable(&self) -> bool {
+        matches!(self.state, BossState::Init(_))
+    }
+
     // chip drains smoothly towards current health
     fn update_displayed_health(&mut self, dt: f32) {
         let target = self.current_health as f32;
