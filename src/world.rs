@@ -74,12 +74,19 @@ impl World {
         // opening kick by one frame's worth of decay.
         self.shake.update(self.dt);
 
-        if is_key_pressed(KeyCode::Space) {
+        // gather input here since World owns the camera (mouse -> world)
+        let input = Input::gather(&self.camera);
+
+        if input.space_pressed {
             self.dev_ui = !self.dev_ui;
         }
 
-        // gather input here since World owns the camera (mouse -> world)
-        let input = Input::gather(&self.camera);
+        if input.tilde_pressed {
+            // reset the entire game state
+            self.arena = Arena::new();
+            self.state = GameState::new();
+        }
+
         self.arena.update(self.dt, &input, &mut self.state);
 
         // the game itself might emit some game events,
