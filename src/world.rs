@@ -68,6 +68,12 @@ impl World {
 
     fn update(&mut self) {
         self.compute_dt();
+
+        // decay/advance the shake before applying this frame's events: a fresh
+        // hit then renders at full trauma. decaying afterwards would clip the
+        // opening kick by one frame's worth of decay.
+        self.shake.update(self.dt);
+
         if is_key_pressed(KeyCode::Space) {
             self.dev_ui = !self.dev_ui;
         }
@@ -83,7 +89,6 @@ impl World {
                 GameEvent::PlayerHit => self.shake.add_trauma(SHAKE_TRAUMA_PER_HIT),
             }
         }
-        self.shake.update(self.dt);
     }
 
     fn draw(&self) {

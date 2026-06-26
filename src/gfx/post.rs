@@ -30,14 +30,9 @@ impl Post {
 
     // render into offscreen target
     pub fn begin(&self, base: &Camera2D) {
-        set_camera(&Camera2D {
-            rotation: base.rotation,
-            zoom: base.zoom,
-            target: base.target,
-            offset: base.offset,
-            viewport: base.viewport,
-            render_target: Some(self.target.clone()),
-        });
+        let mut camera = crate::gfx::clone_camera(base);
+        camera.render_target = Some(self.target.clone());
+        set_camera(&camera);
         clear_background(BACKGROUND);
     }
 

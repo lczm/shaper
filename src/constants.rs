@@ -82,6 +82,9 @@ pub const SHAKE_DECAY: f32 = 1.2;
 pub const SHAKE_MAX_OFFSET: f32 = 16.0;
 // peak rotational kick in degrees at full trauma (set to 0.0 to disable tilt)
 pub const SHAKE_MAX_ANGLE: f32 = 2.5;
+// how fast the shake noise oscillates, in noise samples per second.
+pub const SHAKE_FREQUENCY: f32 = 15.0;
+pub const SHAKE_MIN_TRAUMA: f32 = 0.01;
 
 pub const PHASE_DISTANCE: f32 = 150.0;
 pub const PHASE_DURATION: f32 = 0.20;

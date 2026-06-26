@@ -11,6 +11,21 @@ pub use shake::Shake;
 // default vertex shader
 pub(crate) const VERTEX_SHADER: &str = include_str!("standard.vert");
 
+// macroquad's Camera2D is not Clone, so anything that wants a tweaked copy has
+// to list every field by hand. centralizing that list here means a new macroquad
+// field only has to be handled in one place instead of silently dropped by each
+// hand-rolled copy (see Shake::apply and Post::begin).
+pub(crate) fn clone_camera(camera: &Camera2D) -> Camera2D {
+    Camera2D {
+        rotation: camera.rotation,
+        zoom: camera.zoom,
+        target: camera.target,
+        offset: camera.offset,
+        render_target: camera.render_target.clone(),
+        viewport: camera.viewport,
+    }
+}
+
 pub(crate) fn alpha_blend() -> BlendState {
     BlendState::new(
         Equation::Add,
