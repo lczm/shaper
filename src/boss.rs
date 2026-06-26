@@ -1,10 +1,10 @@
 use macroquad::prelude::*;
 
 use crate::constants::{
-    BACKGROUND, BOSS_COLOR, BOSS_FIRE_INTERVAL, BOSS_HEIGHT, BOSS_IDLE_ROTATION_SPEED,
-    BOSS_PROJECTILE_COLOR, BOSS_PROJECTILE_COUNT, BOSS_SPINUP_DURATION, BOSS_SPINUP_HOLD,
-    BOSS_SPINUP_PEAK_SPEED, BOSS_SPINUP_RAMP_DOWN, BOSS_SPINUP_RAMP_UP, BOSS_WIDTH,
-    HEALTH_BAR_DROP_SPEED, PROJECTILE_SPEED,
+    BACKGROUND, BOSS_AIM_STEP, BOSS_AIM_STEPS, BOSS_COLOR, BOSS_FIRE_INTERVAL, BOSS_HEIGHT,
+    BOSS_IDLE_ROTATION_SPEED, BOSS_PROJECTILE_COLOR, BOSS_PROJECTILE_COUNT, BOSS_SPINUP_DURATION,
+    BOSS_SPINUP_HOLD, BOSS_SPINUP_PEAK_SPEED, BOSS_SPINUP_RAMP_DOWN, BOSS_SPINUP_RAMP_UP,
+    BOSS_WIDTH, HEALTH_BAR_DROP_SPEED, PROJECTILE_SPEED,
 };
 use crate::projectile::{BeamProjectile, BulletProjectile, Projectile, ProjectileKind};
 use crate::shape::Rectangle;
@@ -27,12 +27,15 @@ impl InitState {
 #[derive(Clone, Copy)]
 struct IdleState {
     fire_timer: f32,
+    // how many volleys have been fired; drives the ping-pong aim offset
+    volley: i32,
 }
 
 impl IdleState {
     fn new() -> Self {
         IdleState {
             fire_timer: BOSS_FIRE_INTERVAL,
+            volley: 0,
         }
     }
 }
@@ -110,7 +113,9 @@ impl Boss {
         idle.fire_timer -= dt;
         if idle.fire_timer <= 0.0 {
             idle.fire_timer += BOSS_FIRE_INTERVAL;
-            self.fire_ring(state);
+            // aim with this volley's ping-pong offset, then advance the counter
+            self.fire_ring(state, Self::aim_offset(idle.volley));
+            idle.volley += 1;
         }
 
         self.state = BossState::Idle(idle);
@@ -132,11 +137,29 @@ impl Boss {
         BOSS_IDLE_ROTATION_SPEED + (BOSS_SPINUP_PEAK_SPEED - BOSS_IDLE_ROTATION_SPEED) * factor
     }
 
-    // standard semi-ring pattern projectile downwards
-    fn fire_ring(&self, state: &mut GameState) {
+    // offset the semi-ring volley so the player can't just stay still
+    fn aim_offset(volley: i32) -> f32 {
+        let steps = BOSS_AIM_STEPS;
+        // full cycle calculated with number of volleys
+        let period = 4 * BOSS_AIM_STEPS;
+        let q = volley % period;
+        let tri = if q <= steps {
+            q
+        } else if q <= 3 * steps {
+            2 * steps - q
+        } else {
+            q - 4 * steps
+        };
+        tri as f32 * BOSS_AIM_STEP
+    }
+
+    // semi-ring pattern fired downwards
+    fn fire_ring(&self, state: &mut GameState, aim_offset: f32) {
         for i in 0..BOSS_PROJECTILE_COUNT {
-            // angles in (0, PI) all point downward (+y under the y-down camera)
-            let angle = std::f32::consts::PI * (i as f32 + 0.5) / BOSS_PROJECTILE_COUNT as f32;
+            // angles in (0, PI) all point downward (+y under the y-down camera);
+            // adding the offset sweeps each shot further to the left
+            let base = std::f32::consts::PI * (i as f32 + 0.5) / BOSS_PROJECTILE_COUNT as f32;
+            let angle = base + aim_offset;
             let dir = vec2(angle.cos(), angle.sin());
             state
                 .projectiles

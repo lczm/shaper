@@ -55,6 +55,12 @@ pub const BOSS_SPINUP_DURATION: f32 =
 pub const BOSS_FIRE_INTERVAL: f32 = 0.5;
 // number of projectiles in each all-directions burst
 pub const BOSS_PROJECTILE_COUNT: usize = 15;
+// the fan's aim ping-pongs left/right, one step per volley. BOSS_AIM_STEP is the
+// per-volley angle change (~7 degrees); BOSS_AIM_STEPS is how many steps it takes
+// to reach each extreme. so the sweep spans +/- (STEP * STEPS) radians and, because
+// the turn lands exactly on a step boundary, reverses seamlessly.
+pub const BOSS_AIM_STEP: f32 = 0.12;
+pub const BOSS_AIM_STEPS: i32 = 3;
 
 pub const PROJECTILE_RADIUS: f32 = 6.0;
 // travel speed in pixels per second
