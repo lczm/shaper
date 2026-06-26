@@ -2,7 +2,7 @@ use macroquad::prelude::*;
 
 use crate::constants::{
     ARENA_BORDER_COLOR, HEALTH_BAR_BG_COLOR, HEALTH_BAR_CHIP_COLOR, HEALTH_BAR_FILL_COLOR,
-    HEALTH_BAR_HEIGHT, HEALTH_BAR_TOP_MARGIN, UI_TEXT_COLOR,
+    HEALTH_BAR_HEIGHT, HEALTH_BAR_TOP_MARGIN, RESET_BANNER_FONT_SIZE, UI_TEXT_COLOR,
 };
 use crate::state::GameState;
 
@@ -19,6 +19,7 @@ impl Ui {
         bounds: Rect,
         boss_health: (i32, i32),
         boss_displayed: f32,
+        reset_banner: f32,
     ) {
         // use screen space camera
         set_default_camera();
@@ -32,6 +33,24 @@ impl Ui {
 
         y += 40.0;
         draw_text(format!("Bombs: {}", state.bombs), x, y, 32.0, UI_TEXT_COLOR);
+
+        if reset_banner > 0.0 {
+            self.draw_reset_banner();
+        }
+    }
+
+    // visual reset banner
+    fn draw_reset_banner(&self) {
+        let label = "Reset";
+        let font_size = RESET_BANNER_FONT_SIZE;
+        let dims = measure_text(label, None, font_size as u16, 1.0);
+        draw_text(
+            label,
+            (screen_width() - dims.width) / 2.0,
+            (screen_height() + dims.height) / 2.0,
+            font_size,
+            UI_TEXT_COLOR,
+        );
     }
 
     fn draw_boss_health(&self, bounds: Rect, current: i32, total: i32, displayed: f32) {

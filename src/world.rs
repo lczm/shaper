@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
 
 use crate::arena::Arena;
-use crate::constants::{BACKGROUND, HEIGHT, SHAKE_TRAUMA_PER_HIT, WIDTH};
+use crate::constants::{BACKGROUND, HEIGHT, RESET_BANNER_DURATION, SHAKE_TRAUMA_PER_HIT, WIDTH};
 use crate::dev_ui;
 use crate::gfx::{Post, Shaders, Shake};
 use crate::input::Input;
@@ -25,6 +25,8 @@ pub struct World {
     post: Post,
     // camera screen shake, fed trauma when the player gets hit
     shake: Shake,
+    // seconds remaining on the centered "Reset" banner (0.0 = hidden)
+    reset_banner: f32,
     // egui debug window, toggled with spacebar
     dev_ui: bool,
 }
@@ -46,6 +48,7 @@ impl World {
             shaders: Shaders::new(),
             post: Post::new(),
             shake: Shake::new(),
+            reset_banner: 0.0,
             dev_ui: false,
         }
     }
@@ -74,6 +77,10 @@ impl World {
         // opening kick by one frame's worth of decay.
         self.shake.update(self.dt);
 
+        // count the reset banner down before applying events, so a reset this
+        // frame re-arms it to the full duration and shows at full this frame
+        self.reset_banner = (self.reset_banner - self.dt).max(0.0);
+
         // gather input here since World owns the camera (mouse -> world)
         let input = Input::gather(&self.camera);
 
@@ -85,6 +92,8 @@ impl World {
             // reset the entire game state
             self.arena = Arena::new();
             self.state = GameState::new();
+
+            self.state.events.push(GameEvent::GameReset);
         }
 
         self.arena.update(self.dt, &input, &mut self.state);
@@ -104,6 +113,9 @@ impl World {
                 GameEvent::BombDetonated { position } => {
                     self.state.bombs = self.state.bombs.saturating_sub(1);
                     self.arena.detonate_bomb(position);
+                }
+                GameEvent::GameReset => {
+                    self.reset_banner = RESET_BANNER_DURATION;
                 }
             }
         }
@@ -135,6 +147,7 @@ impl World {
             self.arena.bounds(),
             self.arena.boss_health(),
             self.arena.boss_displayed_health(),
+            self.reset_banner,
         );
 
         // always render dev ui on top of everything else

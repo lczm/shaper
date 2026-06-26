@@ -11,6 +11,10 @@ pub enum GameEvent {
     BossHit { damage: i32 },
     // player set off a bomb at this position; clears nearby hazards
     BombDetonated { position: Vec2 },
+
+    // pushed when (admin) resets the game state, to help render a
+    // text to visually indicate the rest
+    GameReset,
 }
 
 pub struct GameState {
