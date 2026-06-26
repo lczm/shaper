@@ -52,6 +52,9 @@ pub struct Boss {
     state: BossState,
     // current orientation in radians
     rotation: f32,
+    // boss health
+    current_health: i32,
+    total_health: i32,
 }
 
 impl Boss {
@@ -67,6 +70,8 @@ impl Boss {
             mask,
             state: BossState::Init(InitState::new()),
             rotation: 0.0,
+            current_health: 1000,
+            total_health: 1000,
         }
     }
 
@@ -152,6 +157,11 @@ impl Boss {
     // current orientation in radians (used by collision checks)
     pub fn rotation(&self) -> f32 {
         self.rotation
+    }
+
+    // (current, total) health, used to draw the boss health bar
+    pub fn health(&self) -> (i32, i32) {
+        (self.current_health, self.total_health)
     }
 
     pub fn draw(&self) {

@@ -42,6 +42,11 @@ impl Arena {
         &mut self.player
     }
 
+    // (current, total) boss health for the hud health bar
+    pub fn boss_health(&self) -> (i32, i32) {
+        self.boss.health()
+    }
+
     pub fn update(&mut self, dt: f32, input: &Input, state: &mut GameState) {
         self.player.update(dt, input, self.bounds, state);
 

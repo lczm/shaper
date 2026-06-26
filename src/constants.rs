@@ -95,3 +95,12 @@ pub const PHASE_GHOST_OPACITY: f32 = 0.2; // opacity of the freshest ghost
 // initial game state
 pub const STARTING_LIVES: u32 = 3;
 pub const STARTING_BOMBS: u32 = 3;
+
+// boss health bar (top-of-screen hud)
+pub const HEALTH_BAR_HEIGHT: f32 = 28.0;
+// gap from the top window edge down to the bar
+pub const HEALTH_BAR_TOP_MARGIN: f32 = 8.0;
+// empty track colour
+pub const HEALTH_BAR_BG_COLOR: Color = Color::new(0.15, 0.16, 0.22, 0.9);
+// current health colour
+pub const HEALTH_BAR_FILL_COLOR: Color = Color::new(0.90, 0.20, 0.25, 1.0);

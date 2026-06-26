@@ -116,7 +116,8 @@ impl World {
         }
 
         // UI + egui always draw to the screen on top, unaffected by post
-        self.ui.draw(&self.state, self.arena.bounds());
+        self.ui
+            .draw(&self.state, self.arena.bounds(), self.arena.boss_health());
 
         // always render dev ui on top of everything else
         if self.dev_ui {
