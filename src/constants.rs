@@ -73,6 +73,16 @@ pub const BEAM_ACTIVE_DURATION: f32 = 3.0;
 // invulnerability window granted to the player after any hit
 pub const HIT_INVULN_DURATION: f32 = 0.5;
 
+// screen shake (trauma-based): each hit bumps trauma, which decays every second.
+// the visible shake scales with trauma^2 so small bumps stay subtle.
+pub const SHAKE_TRAUMA_PER_HIT: f32 = 0.6;
+// trauma lost per second; 0.6 trauma fully decays in 0.6 / 1.2 = 0.5s
+pub const SHAKE_DECAY: f32 = 1.2;
+// peak positional offset in logical units at full trauma
+pub const SHAKE_MAX_OFFSET: f32 = 16.0;
+// peak rotational kick in degrees at full trauma (set to 0.0 to disable tilt)
+pub const SHAKE_MAX_ANGLE: f32 = 2.5;
+
 pub const PHASE_DISTANCE: f32 = 150.0;
 pub const PHASE_DURATION: f32 = 0.20;
 pub const PHASE_MIN_OPACITY: f32 = 0.1;

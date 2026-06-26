@@ -1,11 +1,11 @@
 use macroquad::prelude::*;
 
 use crate::arena::Arena;
-use crate::constants::{BACKGROUND, HEIGHT, WIDTH};
+use crate::constants::{BACKGROUND, HEIGHT, SHAKE_TRAUMA_PER_HIT, WIDTH};
 use crate::dev_ui;
-use crate::gfx::{Post, Shaders};
+use crate::gfx::{Post, Shaders, Shake};
 use crate::input::Input;
-use crate::state::GameState;
+use crate::state::{GameEvent, GameState};
 use crate::ui::Ui;
 
 // owns the per-frame plumbing (camera, timing, input) and the top-level pieces
@@ -23,6 +23,8 @@ pub struct World {
     shaders: Shaders,
     // full-screen post-process pipeline (dormant until a pass is enabled)
     post: Post,
+    // camera screen shake, fed trauma when the player gets hit
+    shake: Shake,
     // egui debug window, toggled with spacebar
     dev_ui: bool,
 }
@@ -43,6 +45,7 @@ impl World {
             ui: Ui::new(),
             shaders: Shaders::new(),
             post: Post::new(),
+            shake: Shake::new(),
             dev_ui: false,
         }
     }
@@ -72,17 +75,33 @@ impl World {
         // gather input here since World owns the camera (mouse -> world)
         let input = Input::gather(&self.camera);
         self.arena.update(self.dt, &input, &mut self.state);
+
+        // the game itself might emit some game events,
+        // like player hit, react to them here
+        for event in self.state.events.drain(..) {
+            match event {
+                GameEvent::PlayerHit => self.shake.add_trauma(SHAKE_TRAUMA_PER_HIT),
+            }
+        }
+        self.shake.update(self.dt);
     }
 
     fn draw(&self) {
+        // update the camera only if there is some shake effect
+        let shaken = self
+            .shake
+            .is_active()
+            .then(|| self.shake.apply(&self.camera));
+        let camera = shaken.as_ref().unwrap_or(&self.camera);
+
         // if post processing pipeline is active, then pass it through the
         // offscreen rendering, otherwise go straight to screen
         if self.post.active() {
-            self.post.begin(&self.camera);
+            self.post.begin(camera);
             self.arena.draw(&self.state, &self.shaders);
             self.post.present(&self.shaders);
         } else {
-            set_camera(&self.camera);
+            set_camera(camera);
             clear_background(BACKGROUND);
             self.arena.draw(&self.state, &self.shaders);
         }

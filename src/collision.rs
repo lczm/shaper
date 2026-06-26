@@ -4,7 +4,7 @@ use crate::boss::Boss;
 use crate::constants::{BEAM_WIDTH, PROJECTILE_RADIUS};
 use crate::player::Player;
 use crate::projectile::{Projectile, ProjectileKind};
-use crate::state::GameState;
+use crate::state::{GameEvent, GameState};
 
 // circle vs circle collision check
 // true when circle overlaps
@@ -35,7 +35,9 @@ fn segment_circle_overlap(a: Vec2, b: Vec2, half_width: f32, c: Vec2, r: f32) ->
     c.distance_squared(closest) <= (half_width + r).powi(2)
 }
 
-// resolve all projectile hits for this frame
+// resolve all projectile hits for this frame.
+// emits a GameEvent::PlayerHit when the player is hit, so the presentation
+// layer can react (screen shake, etc.) without this signature knowing about it.
 pub fn handle_collisions(state: &mut GameState, player: &mut Player, boss: &Boss) {
     // pull out what the retain closure needs so it doesn't borrow `player`
     let invulnerable = player.is_invulnerable();
@@ -89,5 +91,6 @@ pub fn handle_collisions(state: &mut GameState, player: &mut Player, boss: &Boss
     if player_hit {
         state.lives = state.lives.saturating_sub(1);
         player.register_hit();
+        state.events.push(GameEvent::PlayerHit);
     }
 }

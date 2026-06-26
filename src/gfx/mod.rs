@@ -1,10 +1,12 @@
 mod beam;
 mod post;
+mod shake;
 
 use macroquad::miniquad::{BlendFactor, BlendState, BlendValue, Equation};
 use macroquad::prelude::*;
 
 pub use post::Post;
+pub use shake::Shake;
 
 // default vertex shader
 pub(crate) const VERTEX_SHADER: &str = include_str!("standard.vert");

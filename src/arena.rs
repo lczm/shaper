@@ -1,6 +1,7 @@
 use macroquad::prelude::*;
 
 use crate::boss::Boss;
+use crate::collision::handle_collisions;
 use crate::constants::{
     ARENA_BORDER_COLOR, ARENA_BORDER_THICKNESS, ARENA_MARGIN_HEIGHT, ARENA_MARGIN_WIDTH, HEIGHT,
 };
@@ -54,7 +55,7 @@ impl Arena {
         state.projectiles.retain(|p| !p.is_dead(bounds));
 
         // handle collisions after all movement is done
-        crate::collision::handle_collisions(state, &mut self.player, &self.boss);
+        handle_collisions(state, &mut self.player, &self.boss);
     }
 
     pub fn draw(&self, state: &GameState, shaders: &Shaders) {
