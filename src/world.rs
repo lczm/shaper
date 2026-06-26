@@ -145,6 +145,7 @@ impl World {
         self.ui.draw(
             &self.state,
             self.arena.bounds(),
+            self.arena.player_damage(),
             self.arena.boss_health(),
             self.arena.boss_displayed_health(),
             self.reset_banner,

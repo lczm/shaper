@@ -2,7 +2,8 @@ use macroquad::prelude::*;
 
 use crate::constants::{
     ARENA_BORDER_COLOR, HEALTH_BAR_BG_COLOR, HEALTH_BAR_CHIP_COLOR, HEALTH_BAR_FILL_COLOR,
-    HEALTH_BAR_HEIGHT, HEALTH_BAR_TOP_MARGIN, RESET_BANNER_FONT_SIZE, UI_TEXT_COLOR,
+    HEALTH_BAR_HEIGHT, HEALTH_BAR_TOP_MARGIN, PLAYER_FIRE_INTERVAL, RESET_BANNER_FONT_SIZE,
+    UI_TEXT_COLOR,
 };
 use crate::state::GameState;
 
@@ -17,6 +18,7 @@ impl Ui {
         &self,
         state: &GameState,
         bounds: Rect,
+        player_damage: i32,
         boss_health: (i32, i32),
         boss_displayed: f32,
         reset_banner: f32,
@@ -33,6 +35,30 @@ impl Ui {
 
         y += 40.0;
         draw_text(format!("Bombs: {}", state.bombs), x, y, 32.0, UI_TEXT_COLOR);
+
+        // separator line
+        y += 24.0;
+        draw_line(x, y, x + 500.0, y, 2.0, ARENA_BORDER_COLOR);
+
+        // weapon stats
+        y += 36.0;
+        draw_text(
+            format!("Damage : {player_damage}"),
+            x,
+            y,
+            32.0,
+            UI_TEXT_COLOR,
+        );
+
+        y += 40.0;
+        let fire_rate = 1.0 / PLAYER_FIRE_INTERVAL;
+        draw_text(
+            format!("Fire rate : {fire_rate:.1}/s"),
+            x,
+            y,
+            32.0,
+            UI_TEXT_COLOR,
+        );
 
         if reset_banner > 0.0 {
             self.draw_reset_banner();
