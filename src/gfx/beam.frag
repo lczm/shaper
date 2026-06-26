@@ -1,4 +1,6 @@
-#version 330
+#version 100
+
+precision lowp float;
 
 uniform vec4 beam_color;
 
