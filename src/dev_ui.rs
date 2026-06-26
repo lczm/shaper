@@ -35,27 +35,32 @@ pub fn draw(state: &GameState) {
                     "projectiles: {total}  (boss {boss}, player {player}, beam {beams})"
                 ));
 
-                egui::ScrollArea::vertical()
-                    .max_height(280.0)
-                    .show(ui, |ui| {
-                        for (i, p) in state.projectiles.iter().enumerate() {
-                            let (kind, pos) = match p {
-                                Projectile::Bullet(b) => {
-                                    let kind = match b.kind {
-                                        ProjectileKind::Boss => "boss",
-                                        ProjectileKind::Player { .. } => "player",
-                                    };
-                                    (kind, b.position)
-                                }
-                                Projectile::Beam(beam) => ("beam", beam.start),
-                            };
-                            ui.monospace(format!(
-                                "#{i:<3} {kind:<6} ({:>5.0}, {:>5.0})",
-                                pos.x, pos.y
-                            ));
-                        }
-                    });
+                // draw_projectile_list(ui, state);
             });
     });
     egui_macroquad::draw();
+}
+
+#[allow(dead_code)]
+fn draw_projectile_list(ui: &mut egui::Ui, state: &GameState) {
+    egui::ScrollArea::vertical()
+        .max_height(280.0)
+        .show(ui, |ui| {
+            for (i, p) in state.projectiles.iter().enumerate() {
+                let (kind, pos) = match p {
+                    Projectile::Bullet(b) => {
+                        let kind = match b.kind {
+                            ProjectileKind::Boss => "boss",
+                            ProjectileKind::Player { .. } => "player",
+                        };
+                        (kind, b.position)
+                    }
+                    Projectile::Beam(beam) => ("beam", beam.start),
+                };
+                ui.monospace(format!(
+                    "#{i:<3} {kind:<6} ({:>5.0}, {:>5.0})",
+                    pos.x, pos.y
+                ));
+            }
+        });
 }
