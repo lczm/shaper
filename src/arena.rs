@@ -47,6 +47,10 @@ impl Arena {
         self.boss.health()
     }
 
+    pub fn damage_boss(&mut self, damage: i32) {
+        self.boss.take_damage(damage);
+    }
+
     pub fn update(&mut self, dt: f32, input: &Input, state: &mut GameState) {
         self.player.update(dt, input, self.bounds, state);
 

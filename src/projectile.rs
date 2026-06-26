@@ -10,7 +10,7 @@ use crate::shape::Circle;
 #[derive(Clone, Copy, PartialEq)]
 pub enum ProjectileKind {
     Boss,
-    Player,
+    Player { damage: i32 },
 }
 
 // a moving circular bullet (the original projectile)

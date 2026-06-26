@@ -43,7 +43,7 @@ pub fn draw(state: &GameState) {
                                 Projectile::Bullet(b) => {
                                     let kind = match b.kind {
                                         ProjectileKind::Boss => "boss",
-                                        ProjectileKind::Player => "player",
+                                        ProjectileKind::Player { .. } => "player",
                                     };
                                     (kind, b.position)
                                 }

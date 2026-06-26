@@ -91,8 +91,8 @@ impl World {
                     self.arena.player_mut().register_hit();
                     self.shake.add_trauma(SHAKE_TRAUMA_PER_HIT);
                 }
-                GameEvent::BossHit => {
-                    todo!("boss health and damage not implemented yet");
+                GameEvent::BossHit { damage } => {
+                    self.arena.damage_boss(damage);
                 }
             }
         }

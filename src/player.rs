@@ -28,6 +28,7 @@ pub struct Player {
     fire_timer: f32,
     // post-hit invulnerability window; counts down to 0
     hit_cooldown: f32,
+    damage: i32,
 }
 
 impl Player {
@@ -39,6 +40,7 @@ impl Player {
             trail: Vec::new(),
             fire_timer: 0.0,
             hit_cooldown: 0.0,
+            damage: 5,
         }
     }
 
@@ -125,7 +127,9 @@ impl Player {
                 .push(Projectile::Bullet(BulletProjectile::new(
                     self.position,
                     vec2(0.0, -PLAYER_PROJECTILE_SPEED),
-                    ProjectileKind::Player,
+                    ProjectileKind::Player {
+                        damage: self.damage,
+                    },
                     PLAYER_PROJECTILE_COLOR,
                 )));
         }

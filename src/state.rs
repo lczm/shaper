@@ -6,7 +6,8 @@ use crate::projectile::Projectile;
 // maybe a BombDetonated event in the future
 pub enum GameEvent {
     PlayerHit,
-    BossHit,
+    // boss damaged hit per frame
+    BossHit { damage: i32 },
 }
 
 pub struct GameState {

@@ -164,6 +164,10 @@ impl Boss {
         (self.current_health, self.total_health)
     }
 
+    pub fn take_damage(&mut self, damage: i32) {
+        self.current_health = (self.current_health - damage).max(0);
+    }
+
     pub fn draw(&self) {
         // draw the mask first then the boss
         self.mask.draw_rotated(self.position, self.rotation, 1.0);

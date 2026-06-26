@@ -47,10 +47,10 @@ pub fn handle_collisions(state: &mut GameState, player: &Player, boss: &Boss) {
     let boss_pos = boss.position;
     let boss_half = boss.rect.size / 2.0;
     let boss_rot = boss.rotation();
-
-    // a hit costs at most one life per frame; the i-frame window does the rest
     let mut player_hit = false;
-    let mut boss_hit = false;
+    // there can be more than 1 bullet that hits the boss,
+    // so accumulate all boss projectile damages
+    let mut boss_damage = 0;
     state.projectiles.retain(|p| match p {
         // deal with bullet projectiles
         Projectile::Bullet(b) => match b.kind {
@@ -65,10 +65,15 @@ pub fn handle_collisions(state: &mut GameState, player: &Player, boss: &Boss) {
                     true
                 }
             }
-            // player bullet hits the boss: just consume it for now
-            ProjectileKind::Player => {
-                boss_hit = true;
-                !circle_box_overlap(b.position, PROJECTILE_RADIUS, boss_pos, boss_half, boss_rot)
+            // player bullet hits the boss: deal its damage and consume it
+            ProjectileKind::Player { damage } => {
+                if circle_box_overlap(b.position, PROJECTILE_RADIUS, boss_pos, boss_half, boss_rot)
+                {
+                    boss_damage += damage;
+                    false
+                } else {
+                    true
+                }
             }
         },
         // beam hits the player: only once fully activated (the telegraph is harmless), and
@@ -93,7 +98,10 @@ pub fn handle_collisions(state: &mut GameState, player: &Player, boss: &Boss) {
     if player_hit {
         state.events.push(GameEvent::PlayerHit);
     }
-    if boss_hit {
-        state.events.push(GameEvent::BossHit);
+
+    if boss_damage > 0 {
+        state.events.push(GameEvent::BossHit {
+            damage: boss_damage,
+        });
     }
 }
