@@ -12,7 +12,7 @@ pub fn draw(state: &GameState, arena: &Arena) {
     egui_macroquad::ui(|ctx| {
         ctx.set_pixels_per_point(DEV_UI_SCALE);
 
-        egui::Window::new("dev")
+        egui::Window::new("Shaper Dev")
             .anchor(egui::Align2::RIGHT_TOP, egui::vec2(-10.0, 10.0))
             .default_width(240.0)
             .show(ctx, |ui| {
