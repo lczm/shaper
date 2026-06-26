@@ -36,9 +36,10 @@ fn segment_circle_overlap(a: Vec2, b: Vec2, half_width: f32, c: Vec2, r: f32) ->
 }
 
 // resolve all projectile hits for this frame.
-// emits a GameEvent::PlayerHit when the player is hit, so the presentation
-// layer can react (screen shake, etc.) without this signature knowing about it.
-pub fn handle_collisions(state: &mut GameState, player: &mut Player, boss: &Boss) {
+// only detects hits and emits a GameEvent::PlayerHit; the handler applies the
+// consequences (lose a life, start i-frames, screen shake) in one place, so
+// this function stays read-only over the player.
+pub fn handle_collisions(state: &mut GameState, player: &Player, boss: &Boss) {
     // pull out what the retain closure needs so it doesn't borrow `player`
     let invulnerable = player.is_invulnerable();
     let player_pos = player.position;
@@ -89,8 +90,6 @@ pub fn handle_collisions(state: &mut GameState, player: &mut Player, boss: &Boss
     });
 
     if player_hit {
-        state.lives = state.lives.saturating_sub(1);
-        player.register_hit();
         state.events.push(GameEvent::PlayerHit);
     }
 }

@@ -38,6 +38,10 @@ impl Arena {
         self.bounds
     }
 
+    pub fn player_mut(&mut self) -> &mut Player {
+        &mut self.player
+    }
+
     pub fn update(&mut self, dt: f32, input: &Input, state: &mut GameState) {
         self.player.update(dt, input, self.bounds, state);
 
@@ -55,7 +59,7 @@ impl Arena {
         state.projectiles.retain(|p| !p.is_dead(bounds));
 
         // handle collisions after all movement is done
-        handle_collisions(state, &mut self.player, &self.boss);
+        handle_collisions(state, &self.player, &self.boss);
     }
 
     pub fn draw(&self, state: &GameState, shaders: &Shaders) {

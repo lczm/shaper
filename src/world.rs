@@ -86,7 +86,11 @@ impl World {
         // like player hit, react to them here
         for event in self.state.events.drain(..) {
             match event {
-                GameEvent::PlayerHit => self.shake.add_trauma(SHAKE_TRAUMA_PER_HIT),
+                GameEvent::PlayerHit => {
+                    self.state.lives = self.state.lives.saturating_sub(1);
+                    self.arena.player_mut().register_hit();
+                    self.shake.add_trauma(SHAKE_TRAUMA_PER_HIT);
+                }
             }
         }
     }
