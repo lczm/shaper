@@ -27,7 +27,7 @@ pub const ARENA_MARGIN_HEIGHT: f32 = 40.0;
 pub const ARENA_BORDER_THICKNESS: f32 = 2.0;
 
 pub const PLAYER_CIRCLE_RADIUS: f32 = 10.0;
-pub const PLAYER_SPEED: f32 = 450.0;
+pub const PLAYER_SPEED: f32 = 300.0;
 // seconds between player shots (the player fires continuously)
 pub const PLAYER_FIRE_INTERVAL: f32 = 0.12;
 // upward travel speed of player bullets in pixels per second
