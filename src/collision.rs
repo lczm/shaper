@@ -8,14 +8,14 @@ use crate::state::{GameEvent, GameState};
 
 // circle vs circle collision check
 // true when circle overlaps
-fn circle_circle_overlap(a: Vec2, ar: f32, b: Vec2, br: f32) -> bool {
+pub fn circle_circle_overlap(a: Vec2, ar: f32, b: Vec2, br: f32) -> bool {
     a.distance_squared(b) <= (ar + br).powi(2)
 }
 
 // circle vs rotated box collision
 // we check by undoing the rotation of the box
 // then doing a circle vs AABB test
-fn circle_box_overlap(c: Vec2, r: f32, center: Vec2, half: Vec2, rotation: f32) -> bool {
+pub fn circle_box_overlap(c: Vec2, r: f32, center: Vec2, half: Vec2, rotation: f32) -> bool {
     let local = Vec2::from_angle(-rotation).rotate(c - center);
     let closest = local.clamp(-half, half);
     local.distance_squared(closest) <= r * r
@@ -23,7 +23,7 @@ fn circle_box_overlap(c: Vec2, r: f32, center: Vec2, half: Vec2, rotation: f32) 
 
 // circle vs thick segment (capsule) collision
 // closest point on segment [a, b] to c, compared against the combined radius
-fn segment_circle_overlap(a: Vec2, b: Vec2, half_width: f32, c: Vec2, r: f32) -> bool {
+pub fn segment_circle_overlap(a: Vec2, b: Vec2, half_width: f32, c: Vec2, r: f32) -> bool {
     let ab = b - a;
     let len_sq = ab.length_squared();
     let t = if len_sq > 0.0 {

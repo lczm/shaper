@@ -1,9 +1,11 @@
 use macroquad::prelude::*;
 
+use crate::bomb::Bomb;
 use crate::boss::Boss;
 use crate::collision::handle_collisions;
 use crate::constants::{
-    ARENA_BORDER_COLOR, ARENA_BORDER_THICKNESS, ARENA_MARGIN_HEIGHT, ARENA_MARGIN_WIDTH, HEIGHT,
+    ARENA_BORDER_COLOR, ARENA_BORDER_THICKNESS, ARENA_MARGIN_HEIGHT, ARENA_MARGIN_WIDTH,
+    BOMB_DURATION, HEIGHT,
 };
 use crate::gfx::Shaders;
 use crate::input::Input;
@@ -15,6 +17,8 @@ pub struct Arena {
     bounds: Rect,
     player: Player,
     boss: Boss,
+    // active clearing blast, if one is currently going off
+    bomb: Option<Bomb>,
 }
 
 impl Arena {
@@ -30,6 +34,7 @@ impl Arena {
             // player near the bottom-center, boss near the top-center
             player: Player::new(vec2(center_x, bounds.y + bounds.h * 4.0 / 5.0)),
             boss: Boss::new(vec2(center_x, bounds.y + bounds.h / 5.0)),
+            bomb: None,
         }
     }
 
@@ -60,6 +65,12 @@ impl Arena {
         self.boss.take_damage(damage);
     }
 
+    // set bomb at position (player center) and grant iframes
+    pub fn detonate_bomb(&mut self, position: Vec2) {
+        self.bomb = Some(Bomb::new(position));
+        self.player.grant_invulnerability(BOMB_DURATION);
+    }
+
     pub fn update(&mut self, dt: f32, input: &Input, state: &mut GameState) {
         self.player.update(dt, input, self.bounds, state);
 
@@ -76,6 +87,14 @@ impl Arena {
         let bounds = self.bounds;
         state.projectiles.retain(|p| !p.is_dead(bounds));
 
+        // clears all hazards in the bomb radius
+        if let Some(bomb) = &mut self.bomb {
+            state.projectiles.retain(|p| !bomb.clears(p));
+            if !bomb.update(dt) {
+                self.bomb = None;
+            }
+        }
+
         // handle collisions after all movement is done
         handle_collisions(state, &self.player, &self.boss);
     }
@@ -87,6 +106,11 @@ impl Arena {
         }
         self.player.draw();
         self.boss.draw();
+
+        // bomb ring on top of the scene while it's active
+        if let Some(bomb) = &self.bomb {
+            bomb.draw();
+        }
         self.draw_border();
     }
 

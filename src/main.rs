@@ -1,4 +1,5 @@
 mod arena;
+mod bomb;
 mod boss;
 mod collision;
 mod constants;

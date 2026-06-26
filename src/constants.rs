@@ -107,3 +107,13 @@ pub const HEALTH_BAR_FILL_COLOR: Color = Color::new(0.90, 0.20, 0.25, 1.0);
 // animated chip colour
 pub const HEALTH_BAR_CHIP_COLOR: Color = Color::new(0.98, 0.90, 0.65, 1.0);
 pub const HEALTH_BAR_DROP_SPEED: f32 = 9.0;
+
+// bomb: clears nearby enemy hazards for a short window when detonated
+// clear radius around the player when the bomb goes off
+pub const BOMB_RADIUS: f32 = 200.0;
+// how long the bomb stays active (clearing + visible), in seconds.
+// time-based so it's framerate independent (~10 frames at 60fps)
+pub const BOMB_DURATION: f32 = 0.16;
+// the ring drawn while the bomb is active
+pub const BOMB_BORDER_COLOR: Color = Color::new(0.85, 0.95, 1.0, 1.0); // bright pale cyan
+pub const BOMB_BORDER_THICKNESS: f32 = 3.0;

@@ -9,7 +9,7 @@ use crate::constants::{
 use crate::input::Input;
 use crate::projectile::{BulletProjectile, Projectile, ProjectileKind};
 use crate::shape::Circle;
-use crate::state::GameState;
+use crate::state::{GameEvent, GameState};
 
 #[derive(Clone, Copy)]
 enum PlayerState {
@@ -70,11 +70,13 @@ impl Player {
     }
 
     pub fn update(&mut self, dt: f32, input: &Input, bounds: Rect, state: &mut GameState) {
-        // TODO : bomb effect, probably do some clearing of enemy projectiles
-        // + some iframes for some time
-        if input.z_pressed {
-            state.bombs = state.bombs.saturating_sub(1);
-            todo!("bomb effect not implemented yet");
+        // detonate a bomb on key press if any are left. the bomb count and the
+        // actual clearing are handled where the event is drained (mirrors how
+        // PlayerHit is handled), here we just capture the player position.
+        if input.z_pressed && state.bombs > 0 {
+            state.events.push(GameEvent::BombDetonated {
+                position: self.position,
+            });
         }
 
         // tick down invulnerability window
@@ -178,6 +180,12 @@ impl Player {
     // start the invulnerability window after taking a hit
     pub fn register_hit(&mut self) {
         self.hit_cooldown = HIT_INVULN_DURATION;
+    }
+
+    // extend the invulnerability window (used by the bomb), never shortening an
+    // already-longer cooldown
+    pub fn grant_invulnerability(&mut self, duration: f32) {
+        self.hit_cooldown = self.hit_cooldown.max(duration);
     }
 
     pub fn draw(&self) {

@@ -94,6 +94,10 @@ impl World {
                 GameEvent::BossHit { damage } => {
                     self.arena.damage_boss(damage);
                 }
+                GameEvent::BombDetonated { position } => {
+                    self.state.bombs = self.state.bombs.saturating_sub(1);
+                    self.arena.detonate_bomb(position);
+                }
             }
         }
     }
