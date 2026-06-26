@@ -3,6 +3,7 @@ use macroquad::prelude::*;
 use crate::arena::Arena;
 use crate::constants::{BACKGROUND, HEIGHT, WIDTH};
 use crate::dev_ui;
+use crate::gfx::{Post, Shaders};
 use crate::input::Input;
 use crate::state::GameState;
 use crate::ui::Ui;
@@ -18,6 +19,10 @@ pub struct World {
     arena: Arena,
     state: GameState,
     ui: Ui,
+    // GPU materials, loaded once and shared across the scene
+    shaders: Shaders,
+    // full-screen post-process pipeline (dormant until a pass is enabled)
+    post: Post,
     // egui debug window, toggled with spacebar
     dev_ui: bool,
 }
@@ -36,6 +41,8 @@ impl World {
             arena: Arena::new(),
             state: GameState::new(),
             ui: Ui::new(),
+            shaders: Shaders::new(),
+            post: Post::new(),
             dev_ui: false,
         }
     }
@@ -68,11 +75,19 @@ impl World {
     }
 
     fn draw(&self) {
-        set_camera(&self.camera);
-        clear_background(BACKGROUND);
+        // if post processing pipeline is active, then pass it through the
+        // offscreen rendering, otherwise go straight to screen
+        if self.post.active() {
+            self.post.begin(&self.camera);
+            self.arena.draw(&self.state, &self.shaders);
+            self.post.present(&self.shaders);
+        } else {
+            set_camera(&self.camera);
+            clear_background(BACKGROUND);
+            self.arena.draw(&self.state, &self.shaders);
+        }
 
-        self.arena.draw(&self.state);
-
+        // UI + egui always draw to the screen on top, unaffected by post
         self.ui.draw(&self.state, self.arena.bounds());
 
         // always render dev ui on top of everything else

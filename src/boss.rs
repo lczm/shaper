@@ -6,7 +6,7 @@ use crate::constants::{
     BOSS_SPINUP_PEAK_SPEED, BOSS_SPINUP_RAMP_DOWN, BOSS_SPINUP_RAMP_UP, BOSS_WIDTH,
     PROJECTILE_SPEED,
 };
-use crate::projectile::{Projectile, ProjectileKind};
+use crate::projectile::{BeamProjectile, BulletProjectile, Projectile, ProjectileKind};
 use crate::shape::Rectangle;
 use crate::state::GameState;
 use crate::utils::smoothstep;
@@ -71,19 +71,21 @@ impl Boss {
     }
 
     // match state and delegate to the appropriate update function
-    pub fn update(&mut self, dt: f32, state: &mut GameState) {
+    pub fn update(&mut self, dt: f32, state: &mut GameState, bounds: Rect) {
         match self.state {
-            BossState::Init(init) => self.update_init(dt, init),
+            BossState::Init(init) => self.update_init(dt, init, state, bounds),
             BossState::Idle(idle) => self.update_idle(dt, idle, state),
         }
     }
 
     // spin up animation
-    fn update_init(&mut self, dt: f32, mut init: InitState) {
+    fn update_init(&mut self, dt: f32, mut init: InitState, state: &mut GameState, bounds: Rect) {
         init.elapsed += dt;
         self.rotation += Self::spinup_speed(init.elapsed) * dt;
 
         if init.elapsed >= BOSS_SPINUP_DURATION {
+            // the beam comes online once the spin settles
+            self.spawn_beam(state, bounds);
             self.state = BossState::Idle(IdleState::new());
         } else {
             self.state = BossState::Init(init);
@@ -125,13 +127,26 @@ impl Boss {
             // angles in (0, PI) all point downward (+y under the y-down camera)
             let angle = std::f32::consts::PI * (i as f32 + 0.5) / BOSS_PROJECTILE_COUNT as f32;
             let dir = vec2(angle.cos(), angle.sin());
-            state.projectiles.push(Projectile::new(
-                self.position,
-                dir * PROJECTILE_SPEED,
-                ProjectileKind::Boss,
-                BOSS_PROJECTILE_COLOR,
-            ));
+            state
+                .projectiles
+                .push(Projectile::Bullet(BulletProjectile::new(
+                    self.position,
+                    dir * PROJECTILE_SPEED,
+                    ProjectileKind::Boss,
+                    BOSS_PROJECTILE_COLOR,
+                )));
         }
+    }
+
+    // spawn a beam from the boss straight down to the arena floor. BeamProjectile takes
+    // arbitrary start/end points, so this could be aimed anywhere on the map.
+    fn spawn_beam(&self, state: &mut GameState, bounds: Rect) {
+        // todo : randomize start and end at some point
+        let start = self.position;
+        let end = vec2(self.position.x, bounds.y + bounds.h);
+        state
+            .projectiles
+            .push(Projectile::Beam(BeamProjectile::new(start, end)));
     }
 
     // current orientation in radians (used by collision checks)

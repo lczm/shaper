@@ -1,6 +1,10 @@
 use macroquad::prelude::*;
 
-use crate::constants::{ARENA_BORDER_THICKNESS, PROJECTILE_RADIUS};
+use crate::constants::{
+    ARENA_BORDER_THICKNESS, BEAM_ACTIVE_DURATION, BEAM_BORDER_THICKNESS, BEAM_COLOR,
+    BEAM_STARTUP_DURATION, BEAM_WIDTH, PROJECTILE_RADIUS,
+};
+use crate::gfx::Shaders;
 use crate::shape::Circle;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -9,20 +13,20 @@ pub enum ProjectileKind {
     Player,
 }
 
-pub struct Projectile {
+// a moving circular bullet (the original projectile)
+pub struct BulletProjectile {
     pub position: Vec2,
     velocity: Vec2,
     circle: Circle,
     color: Color,
-    // TODO: to be used by collision checking
     pub kind: ProjectileKind,
 }
 
-impl Projectile {
+impl BulletProjectile {
     pub fn new(position: Vec2, velocity: Vec2, kind: ProjectileKind, color: Color) -> Self {
         let mut circle = Circle::new(PROJECTILE_RADIUS, color);
         circle.filled = true;
-        Projectile {
+        BulletProjectile {
             position,
             velocity,
             circle,
@@ -48,5 +52,92 @@ impl Projectile {
 
     pub fn draw(&self) {
         self.circle.draw_colored(self.position, self.color, 1.0);
+    }
+}
+
+// a beam, starts off as an indicator and becomes active
+pub struct BeamProjectile {
+    pub start: Vec2,
+    pub end: Vec2,
+    // needed to track the -> spawn -> inactive indicator -> active -> despawn
+    elapsed: f32,
+}
+
+impl BeamProjectile {
+    pub fn new(start: Vec2, end: Vec2) -> Self {
+        BeamProjectile {
+            start,
+            end,
+            elapsed: 0.0,
+        }
+    }
+
+    pub fn update(&mut self, dt: f32) {
+        self.elapsed += dt;
+    }
+
+    // it is active only after the startup duration
+    pub fn is_active(&self) -> bool {
+        self.elapsed >= BEAM_STARTUP_DURATION
+            && self.elapsed < BEAM_STARTUP_DURATION + BEAM_ACTIVE_DURATION
+    }
+
+    // anytime after the active window
+    pub fn is_expired(&self) -> bool {
+        self.elapsed >= BEAM_STARTUP_DURATION + BEAM_ACTIVE_DURATION
+    }
+
+    pub fn draw(&self, shaders: &Shaders) {
+        if self.is_active() {
+            // active shadow draw beam
+            shaders.draw_beam(self.start, self.end, BEAM_WIDTH, BEAM_COLOR);
+        } else {
+            // todo : this draws a white border but make it neater
+            let dir = (self.end - self.start).normalize_or_zero();
+            let perp = vec2(-dir.y, dir.x);
+            let inset = (BEAM_WIDTH - BEAM_BORDER_THICKNESS) / 2.0;
+            for side in [-1.0, 1.0] {
+                let off = perp * (inset * side);
+                draw_line(
+                    self.start.x + off.x,
+                    self.start.y + off.y,
+                    self.end.x + off.x,
+                    self.end.y + off.y,
+                    BEAM_BORDER_THICKNESS,
+                    WHITE,
+                );
+            }
+        }
+    }
+}
+
+// either kind of projectile, stored together in the game state
+pub enum Projectile {
+    Bullet(BulletProjectile),
+    Beam(BeamProjectile),
+}
+
+impl Projectile {
+    pub fn update(&mut self, dt: f32) {
+        match self {
+            Projectile::Bullet(b) => b.update(dt),
+            Projectile::Beam(beam) => beam.update(dt),
+        }
+    }
+
+    // true when the projectile should be removed
+    // the arena uses this to remove it
+    pub fn is_dead(&self, bounds: Rect) -> bool {
+        match self {
+            Projectile::Bullet(b) => b.is_off_screen(bounds),
+            Projectile::Beam(beam) => beam.is_expired(),
+        }
+    }
+
+    pub fn draw(&self, shaders: &Shaders) {
+        match self {
+            Projectile::Bullet(b) => b.draw(),
+            Projectile::Beam(beam) => beam.draw(shaders),
+        }
     }
 }

@@ -3,6 +3,7 @@ mod boss;
 mod collision;
 mod constants;
 mod dev_ui;
+mod gfx;
 mod input;
 mod player;
 mod projectile;

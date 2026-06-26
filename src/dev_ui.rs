@@ -1,6 +1,6 @@
 use egui_macroquad::egui;
 
-use crate::projectile::ProjectileKind;
+use crate::projectile::{Projectile, ProjectileKind};
 use crate::state::GameState;
 
 // scale to make it bigger
@@ -21,24 +21,37 @@ pub fn draw(state: &GameState) {
                 let boss = state
                     .projectiles
                     .iter()
-                    .filter(|p| p.kind == ProjectileKind::Boss)
+                    .filter(
+                        |p| matches!(p, Projectile::Bullet(b) if b.kind == ProjectileKind::Boss),
+                    )
                     .count();
-                let player = total - boss;
+                let beams = state
+                    .projectiles
+                    .iter()
+                    .filter(|p| matches!(p, Projectile::Beam(_)))
+                    .count();
+                let player = total - boss - beams;
                 ui.label(format!(
-                    "projectiles: {total}  (boss {boss}, player {player})"
+                    "projectiles: {total}  (boss {boss}, player {player}, beam {beams})"
                 ));
 
                 egui::ScrollArea::vertical()
                     .max_height(280.0)
                     .show(ui, |ui| {
                         for (i, p) in state.projectiles.iter().enumerate() {
-                            let kind = match p.kind {
-                                ProjectileKind::Boss => "boss",
-                                ProjectileKind::Player => "player",
+                            let (kind, pos) = match p {
+                                Projectile::Bullet(b) => {
+                                    let kind = match b.kind {
+                                        ProjectileKind::Boss => "boss",
+                                        ProjectileKind::Player => "player",
+                                    };
+                                    (kind, b.position)
+                                }
+                                Projectile::Beam(beam) => ("beam", beam.start),
                             };
                             ui.monospace(format!(
                                 "#{i:<3} {kind:<6} ({:>5.0}, {:>5.0})",
-                                p.position.x, p.position.y
+                                pos.x, pos.y
                             ));
                         }
                     });

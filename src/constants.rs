@@ -60,6 +60,19 @@ pub const PROJECTILE_RADIUS: f32 = 6.0;
 // travel speed in pixels per second
 pub const PROJECTILE_SPEED: f32 = 120.0;
 
+// persistent sweeping beam fired by the boss
+pub const BEAM_WIDTH: f32 = 16.0;
+// beam colour when active
+pub const BEAM_COLOR: Color = Color::new(1.0, 0.25, 0.35, 0.95);
+// the thickness to show when the beam is inactive
+pub const BEAM_BORDER_THICKNESS: f32 = 2.0;
+// beam time taken to become active
+pub const BEAM_STARTUP_DURATION: f32 = 1.5;
+pub const BEAM_ACTIVE_DURATION: f32 = 3.0;
+
+// invulnerability window granted to the player after any hit
+pub const HIT_INVULN_DURATION: f32 = 0.5;
+
 pub const PHASE_DISTANCE: f32 = 150.0;
 pub const PHASE_DURATION: f32 = 0.20;
 pub const PHASE_MIN_OPACITY: f32 = 0.1;

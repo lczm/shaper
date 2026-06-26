@@ -1,13 +1,13 @@
 use macroquad::prelude::*;
 
 use crate::constants::{
-    ARENA_BORDER_THICKNESS, PHASE_DISTANCE, PHASE_DURATION, PHASE_GHOST_OPACITY, PHASE_MIN_OPACITY,
-    PHASE_TRAIL_LENGTH, PLAYER_CIRCLE_RADIUS, PLAYER_COLOR, PLAYER_FIRE_INTERVAL,
-    PLAYER_PHASING_COLOR, PLAYER_PROJECTILE_COLOR, PLAYER_PROJECTILE_SPEED, PLAYER_SPEED,
-    PLAYER_TRAIL_COLOR,
+    ARENA_BORDER_THICKNESS, HIT_INVULN_DURATION, PHASE_DISTANCE, PHASE_DURATION,
+    PHASE_GHOST_OPACITY, PHASE_MIN_OPACITY, PHASE_TRAIL_LENGTH, PLAYER_CIRCLE_RADIUS, PLAYER_COLOR,
+    PLAYER_FIRE_INTERVAL, PLAYER_PHASING_COLOR, PLAYER_PROJECTILE_COLOR, PLAYER_PROJECTILE_SPEED,
+    PLAYER_SPEED, PLAYER_TRAIL_COLOR,
 };
 use crate::input::Input;
-use crate::projectile::{Projectile, ProjectileKind};
+use crate::projectile::{BulletProjectile, Projectile, ProjectileKind};
 use crate::shape::Circle;
 use crate::state::GameState;
 
@@ -26,6 +26,8 @@ pub struct Player {
     trail: Vec<Vec2>,
     // counts down to the next shot
     fire_timer: f32,
+    // post-hit invulnerability window; counts down to 0
+    hit_cooldown: f32,
 }
 
 impl Player {
@@ -36,6 +38,7 @@ impl Player {
             state: PlayerState::Normal,
             trail: Vec::new(),
             fire_timer: 0.0,
+            hit_cooldown: 0.0,
         }
     }
 
@@ -66,6 +69,11 @@ impl Player {
         if input.z_pressed {
             state.bombs = state.bombs.saturating_sub(1);
             todo!("bomb effect not implemented yet");
+        }
+
+        // tick down invulnerability window
+        if self.hit_cooldown > 0.0 {
+            self.hit_cooldown -= dt;
         }
 
         let dir = Self::calculate_movement_vector(input);
@@ -111,12 +119,15 @@ impl Player {
         }
         if self.fire_timer <= 0.0 {
             self.fire_timer = PLAYER_FIRE_INTERVAL;
-            state.projectiles.push(Projectile::new(
-                self.position,
-                vec2(0.0, -PLAYER_PROJECTILE_SPEED),
-                ProjectileKind::Player,
-                PLAYER_PROJECTILE_COLOR,
-            ));
+            // continuously spawn new bullet projectile from the player position upwards
+            state
+                .projectiles
+                .push(Projectile::Bullet(BulletProjectile::new(
+                    self.position,
+                    vec2(0.0, -PLAYER_PROJECTILE_SPEED),
+                    ProjectileKind::Player,
+                    PLAYER_PROJECTILE_COLOR,
+                )));
         }
     }
 
@@ -151,9 +162,14 @@ impl Player {
         }
     }
 
-    // true during the phase i-frame window
+    // true while phasing or during the post-hit invulnerability window
     pub fn is_invulnerable(&self) -> bool {
-        matches!(self.state, PlayerState::Phasing { .. })
+        matches!(self.state, PlayerState::Phasing { .. }) || self.hit_cooldown > 0.0
+    }
+
+    // start the invulnerability window after taking a hit
+    pub fn register_hit(&mut self) {
+        self.hit_cooldown = HIT_INVULN_DURATION;
     }
 
     pub fn draw(&self) {

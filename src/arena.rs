@@ -4,6 +4,7 @@ use crate::boss::Boss;
 use crate::constants::{
     ARENA_BORDER_COLOR, ARENA_BORDER_THICKNESS, ARENA_MARGIN_HEIGHT, ARENA_MARGIN_WIDTH, HEIGHT,
 };
+use crate::gfx::Shaders;
 use crate::input::Input;
 use crate::player::Player;
 use crate::state::GameState;
@@ -40,25 +41,26 @@ impl Arena {
         self.player.update(dt, input, self.bounds, state);
 
         // boss may push some projectiles into the game state
-        self.boss.update(dt, state);
+        self.boss.update(dt, state, self.bounds);
 
-        // update projectile movements
+        // update projectiles, some projectiles are beams or bullets
+        // that has to go through their lifecycle
         for projectile in &mut state.projectiles {
             projectile.update(dt);
         }
 
-        // drop any projectiles that have left the arena
+        // drop bullets that left the arena and beams that have expired
         let bounds = self.bounds;
-        state.projectiles.retain(|p| !p.is_off_screen(bounds));
+        state.projectiles.retain(|p| !p.is_dead(bounds));
 
         // handle collisions after all movement is done
-        crate::collision::handle_collisions(state, &self.player, &self.boss);
+        crate::collision::handle_collisions(state, &mut self.player, &self.boss);
     }
 
-    pub fn draw(&self, state: &GameState) {
+    pub fn draw(&self, state: &GameState, shaders: &Shaders) {
         // projectiles first so the boss draws on top and hides any under it
         for projectile in &state.projectiles {
-            projectile.draw();
+            projectile.draw(shaders);
         }
         self.player.draw();
         self.boss.draw();

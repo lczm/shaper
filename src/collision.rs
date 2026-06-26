@@ -1,9 +1,9 @@
 use macroquad::prelude::*;
 
 use crate::boss::Boss;
-use crate::constants::PROJECTILE_RADIUS;
+use crate::constants::{BEAM_WIDTH, PROJECTILE_RADIUS};
 use crate::player::Player;
-use crate::projectile::ProjectileKind;
+use crate::projectile::{Projectile, ProjectileKind};
 use crate::state::GameState;
 
 // circle vs circle collision check
@@ -21,8 +21,23 @@ fn circle_box_overlap(c: Vec2, r: f32, center: Vec2, half: Vec2, rotation: f32) 
     local.distance_squared(closest) <= r * r
 }
 
+// circle vs thick segment (capsule) collision
+// closest point on segment [a, b] to c, compared against the combined radius
+fn segment_circle_overlap(a: Vec2, b: Vec2, half_width: f32, c: Vec2, r: f32) -> bool {
+    let ab = b - a;
+    let len_sq = ab.length_squared();
+    let t = if len_sq > 0.0 {
+        ((c - a).dot(ab) / len_sq).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    let closest = a + ab * t;
+    c.distance_squared(closest) <= (half_width + r).powi(2)
+}
+
 // resolve all projectile hits for this frame
-pub fn handle_collisions(state: &mut GameState, player: &Player, boss: &Boss) {
+pub fn handle_collisions(state: &mut GameState, player: &mut Player, boss: &Boss) {
+    // pull out what the retain closure needs so it doesn't borrow `player`
     let invulnerable = player.is_invulnerable();
     let player_pos = player.position;
     let player_r = player.circle.radius;
@@ -30,26 +45,49 @@ pub fn handle_collisions(state: &mut GameState, player: &Player, boss: &Boss) {
     let boss_half = boss.rect.size / 2.0;
     let boss_rot = boss.rotation();
 
-    let mut lives_lost: u32 = 0;
-    state.projectiles.retain(|p| match p.kind {
-        // boss bullet hits the player
-        // for now, lose a life except when iframing on phasing, consume the bullet
-        ProjectileKind::Boss => {
-            if !invulnerable
-                && circle_circle_overlap(p.position, PROJECTILE_RADIUS, player_pos, player_r)
-            {
-                lives_lost += 1;
-                false
-            } else {
-                true
+    // a hit costs at most one life per frame; the i-frame window does the rest
+    let mut player_hit = false;
+    state.projectiles.retain(|p| match p {
+        // deal with bullet projectiles
+        Projectile::Bullet(b) => match b.kind {
+            // boss bullet hits the player: lose a life unless i-framed, consume the bullet
+            ProjectileKind::Boss => {
+                if !invulnerable
+                    && circle_circle_overlap(b.position, PROJECTILE_RADIUS, player_pos, player_r)
+                {
+                    player_hit = true;
+                    false
+                } else {
+                    true
+                }
             }
-        }
-        // when player projectile hit the boss
-        // just consume it for now,
-        // TODO : add boss health and damage later
-        ProjectileKind::Player => {
-            !circle_box_overlap(p.position, PROJECTILE_RADIUS, boss_pos, boss_half, boss_rot)
+            // player bullet hits the boss: just consume it for now
+            // TODO : add boss health and damage later
+            ProjectileKind::Player => {
+                !circle_box_overlap(b.position, PROJECTILE_RADIUS, boss_pos, boss_half, boss_rot)
+            }
+        },
+        // beam hits the player: only once fully activated (the telegraph is harmless), and
+        // unless i-framed. the beam persists either way.
+        Projectile::Beam(beam) => {
+            if !invulnerable
+                && beam.is_active()
+                && segment_circle_overlap(
+                    beam.start,
+                    beam.end,
+                    BEAM_WIDTH / 2.0,
+                    player_pos,
+                    player_r,
+                )
+            {
+                player_hit = true;
+            }
+            true
         }
     });
-    state.lives = state.lives.saturating_sub(lives_lost);
+
+    if player_hit {
+        state.lives = state.lives.saturating_sub(1);
+        player.register_hit();
+    }
 }
