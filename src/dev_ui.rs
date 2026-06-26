@@ -1,4 +1,5 @@
 use egui_macroquad::egui;
+use macroquad::prelude::{get_fps, get_frame_time};
 
 use crate::arena::Arena;
 use crate::projectile::{Projectile, ProjectileKind};
@@ -15,6 +16,13 @@ pub fn draw(state: &GameState, arena: &Arena) {
             .anchor(egui::Align2::RIGHT_TOP, egui::vec2(-10.0, 10.0))
             .default_width(240.0)
             .show(ctx, |ui| {
+                ui.label(format!(
+                    "fps: {}  ({:.1} ms)",
+                    get_fps(),
+                    get_frame_time() * 1000.0
+                ));
+                ui.separator();
+
                 let (boss_current, boss_total) = arena.boss_health();
                 ui.label(format!("boss hp: {boss_current} / {boss_total}"));
                 ui.separator();
