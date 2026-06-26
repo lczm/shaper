@@ -9,7 +9,8 @@ use crate::constants::{
 use crate::input::Input;
 use crate::projectile::{BulletProjectile, Projectile, ProjectileKind};
 use crate::shape::Circle;
-use crate::state::{GameEvent, GameState};
+use crate::state::GameState;
+use crate::world::GameEvent;
 
 #[derive(Clone, Copy)]
 enum PlayerState {
@@ -69,12 +70,19 @@ impl Player {
         direction
     }
 
-    pub fn update(&mut self, dt: f32, input: &Input, bounds: Rect, state: &mut GameState) {
+    pub fn update(
+        &mut self,
+        dt: f32,
+        input: &Input,
+        bounds: Rect,
+        state: &mut GameState,
+        events: &mut Vec<GameEvent>,
+    ) {
         // detonate a bomb on key press if any are left. the bomb count and the
         // actual clearing are handled where the event is drained (mirrors how
         // PlayerHit is handled), here we just capture the player position.
         if input.z_pressed && state.bombs > 0 {
-            state.events.push(GameEvent::BombDetonated {
+            events.push(GameEvent::BombDetonated {
                 position: self.position,
             });
         }

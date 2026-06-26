@@ -11,6 +11,7 @@ use crate::gfx::Shaders;
 use crate::input::Input;
 use crate::player::Player;
 use crate::state::GameState;
+use crate::world::GameEvent;
 
 // the gameplay arena and everything inside it
 pub struct Arena {
@@ -71,8 +72,14 @@ impl Arena {
         self.player.grant_invulnerability(BOMB_DURATION);
     }
 
-    pub fn update(&mut self, dt: f32, input: &Input, state: &mut GameState) {
-        self.player.update(dt, input, self.bounds, state);
+    pub fn update(
+        &mut self,
+        dt: f32,
+        input: &Input,
+        state: &mut GameState,
+        events: &mut Vec<GameEvent>,
+    ) {
+        self.player.update(dt, input, self.bounds, state, events);
 
         // boss may push some projectiles into the game state
         self.boss.update(dt, state, self.bounds);
@@ -96,7 +103,7 @@ impl Arena {
         }
 
         // handle collisions after all movement is done
-        handle_collisions(state, &self.player, &self.boss);
+        handle_collisions(state, &self.player, &self.boss, events);
     }
 
     pub fn draw(&self, state: &GameState, shaders: &Shaders) {

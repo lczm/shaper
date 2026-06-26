@@ -1,12 +1,28 @@
 use macroquad::prelude::*;
 
 use crate::arena::Arena;
-use crate::constants::{BACKGROUND, HEIGHT, RESET_BANNER_DURATION, SHAKE_TRAUMA_PER_HIT, WIDTH};
+use crate::constants::{
+    BACKGROUND, HEIGHT, LOST_BANNER_DURATION, RESET_BANNER_DURATION, SHAKE_TRAUMA_PER_HIT, WIDTH,
+};
 use crate::dev_ui;
 use crate::gfx::{Post, Shaders, Shake};
 use crate::input::Input;
-use crate::state::{GameEvent, GameState};
+use crate::state::GameState;
 use crate::ui::Ui;
+
+// things that the game events can emit
+// like the player getting hit
+pub enum GameEvent {
+    PlayerHit,
+    // boss damaged hit per frame
+    BossHit { damage: i32 },
+    // player set off a bomb at this position; clears nearby hazards
+    BombDetonated { position: Vec2 },
+
+    // pushed when (admin) resets the game state, to help render a
+    // text to visually indicate the rest
+    GameReset,
+}
 
 // owns the per-frame plumbing (camera, timing, input) and the top-level pieces
 // (arena, stage, ui, state), and orchestrates the frame.
@@ -25,10 +41,15 @@ pub struct World {
     post: Post,
     // camera screen shake, fed trauma when the player gets hit
     shake: Shake,
-    // seconds remaining on the centered "Reset" banner (0.0 = hidden)
+    // seconds remaining on the centered "Reset" banner
     reset_banner: f32,
+    // seconds remaining on the centered "Lost" banner
+    lost_banner: f32,
     // egui debug window, toggled with spacebar
     dev_ui: bool,
+
+    // drained every frame
+    pub events: Vec<GameEvent>,
 }
 
 impl World {
@@ -49,7 +70,9 @@ impl World {
             post: Post::new(),
             shake: Shake::new(),
             reset_banner: 0.0,
+            lost_banner: 0.0,
             dev_ui: false,
+            events: Vec::new(),
         }
     }
 
@@ -81,6 +104,8 @@ impl World {
         // frame re-arms it to the full duration and shows at full this frame
         self.reset_banner = (self.reset_banner - self.dt).max(0.0);
 
+        self.lost_banner = (self.lost_banner - self.dt).max(0.0);
+
         // gather input here since World owns the camera (mouse -> world)
         let input = Input::gather(&self.camera);
 
@@ -93,19 +118,29 @@ impl World {
             self.arena = Arena::new();
             self.state = GameState::new();
 
-            self.state.events.push(GameEvent::GameReset);
+            self.events.push(GameEvent::GameReset);
         }
 
-        self.arena.update(self.dt, &input, &mut self.state);
+        self.arena
+            .update(self.dt, &input, &mut self.state, &mut self.events);
 
         // the game itself might emit some game events,
         // like player hit, react to them here
-        for event in self.state.events.drain(..) {
+        for event in self.events.drain(..) {
             match event {
                 GameEvent::PlayerHit => {
                     self.state.lives = self.state.lives.saturating_sub(1);
                     self.arena.player_mut().register_hit();
                     self.shake.add_trauma(SHAKE_TRAUMA_PER_HIT);
+
+                    if self.state.lives == 0 {
+                        // reset the entire game state
+                        self.arena = Arena::new();
+                        self.state = GameState::new();
+                        // world is fresh now; drop any remaining stale events
+                        self.lost_banner = LOST_BANNER_DURATION;
+                        break;
+                    }
                 }
                 GameEvent::BossHit { damage } => {
                     self.arena.damage_boss(damage);
@@ -149,6 +184,7 @@ impl World {
             self.arena.boss_health(),
             self.arena.boss_displayed_health(),
             self.reset_banner,
+            self.lost_banner,
         );
 
         // always render dev ui on top of everything else

@@ -3,26 +3,10 @@ use macroquad::prelude::Vec2;
 use crate::constants::{STARTING_BOMBS, STARTING_LIVES};
 use crate::projectile::Projectile;
 
-// things that the game events can emit
-// like the player getting hit
-pub enum GameEvent {
-    PlayerHit,
-    // boss damaged hit per frame
-    BossHit { damage: i32 },
-    // player set off a bomb at this position; clears nearby hazards
-    BombDetonated { position: Vec2 },
-
-    // pushed when (admin) resets the game state, to help render a
-    // text to visually indicate the rest
-    GameReset,
-}
-
 pub struct GameState {
     pub lives: u32,
     pub bombs: u32,
     pub projectiles: Vec<Projectile>,
-    // drained every frame
-    pub events: Vec<GameEvent>,
 }
 
 impl GameState {
@@ -31,7 +15,6 @@ impl GameState {
             lives: STARTING_LIVES,
             bombs: STARTING_BOMBS,
             projectiles: Vec::new(),
-            events: Vec::new(),
         }
     }
 }

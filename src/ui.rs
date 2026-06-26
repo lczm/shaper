@@ -22,6 +22,7 @@ impl Ui {
         boss_health: (i32, i32),
         boss_displayed: f32,
         reset_banner: f32,
+        lost_banner: f32,
     ) {
         // use screen space camera
         set_default_camera();
@@ -63,11 +64,28 @@ impl Ui {
         if reset_banner > 0.0 {
             self.draw_reset_banner();
         }
+
+        if lost_banner > 0.0 {
+            self.draw_lost_banner();
+        }
     }
 
     // visual reset banner
     fn draw_reset_banner(&self) {
         let label = "Reset";
+        let font_size = RESET_BANNER_FONT_SIZE;
+        let dims = measure_text(label, None, font_size as u16, 1.0);
+        draw_text(
+            label,
+            (screen_width() - dims.width) / 2.0,
+            (screen_height() + dims.height) / 2.0,
+            font_size,
+            UI_TEXT_COLOR,
+        );
+    }
+
+    fn draw_lost_banner(&self) {
+        let label = "Lost";
         let font_size = RESET_BANNER_FONT_SIZE;
         let dims = measure_text(label, None, font_size as u16, 1.0);
         draw_text(
