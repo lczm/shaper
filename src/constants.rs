@@ -66,8 +66,16 @@ pub const PROJECTILE_RADIUS: f32 = 6.0;
 // travel speed in pixels per second
 pub const PROJECTILE_SPEED: f32 = 120.0;
 
+// the boss fires a beam volley on this interval. the telegraph + active window is
+// ~4.5s (see BEAM_STARTUP_DURATION + BEAM_ACTIVE_DURATION), so this stays comfortably
+// longer to keep the beam attack infrequent
+pub const BOSS_BEAM_INTERVAL: f32 = 6.0;
+
 // persistent sweeping beam fired by the boss
 pub const BEAM_WIDTH: f32 = 16.0;
+// beams are drawn overshooting the arena by this much so their flat end caps never
+// leave a triangular gap at the edges; the overflow is hidden by the arena frame mask
+pub const BEAM_EDGE_OVERSHOOT: f32 = 50.0;
 // beam colour when active
 pub const BEAM_COLOR: Color = Color::new(1.0, 0.25, 0.35, 0.95);
 // the thickness to show when the beam is inactive

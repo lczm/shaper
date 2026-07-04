@@ -4,7 +4,7 @@ use crate::bomb::Bomb;
 use crate::boss::Boss;
 use crate::collision::handle_collisions;
 use crate::constants::{
-    ARENA_BORDER_COLOR, ARENA_BORDER_THICKNESS, ARENA_MARGIN_HEIGHT, ARENA_MARGIN_WIDTH,
+    ARENA_BORDER_COLOR, ARENA_BORDER_THICKNESS, ARENA_MARGIN_HEIGHT, ARENA_MARGIN_WIDTH, BACKGROUND,
     BOMB_DURATION, HEIGHT,
 };
 use crate::gfx::Shaders;
@@ -81,8 +81,8 @@ impl Arena {
     ) {
         self.player.update(dt, input, self.bounds, state, events);
 
-        // boss may push some projectiles into the game state
-        self.boss.update(dt, state, self.bounds);
+        // boss may push some projectiles into the game state; it aims beams at the player
+        self.boss.update(dt, state, self.bounds, self.player.position);
 
         // update projectiles, some projectiles are beams or bullets
         // that has to go through their lifecycle
@@ -111,6 +111,11 @@ impl Arena {
         for projectile in &state.projectiles {
             projectile.draw(shaders);
         }
+        // beams are drawn overshooting the arena edges (see Boss::beam_span); paint over
+        // everything outside the arena now to hide that overflow, before the rest of the
+        // scene draws on top
+        self.draw_frame_mask();
+
         self.player.draw();
         self.boss.draw();
 
@@ -119,6 +124,17 @@ impl Arena {
             bomb.draw();
         }
         self.draw_border();
+    }
+
+    // fill everything just outside the arena with the background colour, masking the bit
+    // of each beam drawn past the edges. pad is generous so screen shake can't reveal a seam
+    fn draw_frame_mask(&self) {
+        let b = self.bounds;
+        let pad = 1000.0;
+        draw_rectangle(b.x - pad, b.y - pad, pad, b.h + 2.0 * pad, BACKGROUND); // left
+        draw_rectangle(b.x + b.w, b.y - pad, pad, b.h + 2.0 * pad, BACKGROUND); // right
+        draw_rectangle(b.x - pad, b.y - pad, b.w + 2.0 * pad, pad, BACKGROUND); // top
+        draw_rectangle(b.x - pad, b.y + b.h, b.w + 2.0 * pad, pad, BACKGROUND); // bottom
     }
 
     fn draw_border(&self) {

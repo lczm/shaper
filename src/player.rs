@@ -78,9 +78,8 @@ impl Player {
         state: &mut GameState,
         events: &mut Vec<GameEvent>,
     ) {
-        // detonate a bomb on key press if any are left. the bomb count and the
-        // actual clearing are handled where the event is drained (mirrors how
-        // PlayerHit is handled), here we just capture the player position.
+        // detonate a bomb on key press if any are left
+        // push an event that the event handler will deal with later
         if input.z_pressed && state.bombs > 0 {
             events.push(GameEvent::BombDetonated {
                 position: self.position,
