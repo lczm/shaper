@@ -71,6 +71,8 @@ pub const PROJECTILE_SPEED: f32 = 120.0;
 // longer to keep the beam attack infrequent
 pub const BOSS_BEAM_INTERVAL: f32 = 6.0;
 
+// how far past arena bounds the frame mask is drawn to hide the beam overshoot
+pub const FRAME_MASK_PAD: f32 = 1000.0;
 // persistent sweeping beam fired by the boss
 pub const BEAM_WIDTH: f32 = 16.0;
 // beams are drawn overshooting the arena by this much so their flat end caps never

@@ -5,7 +5,7 @@ use crate::boss::Boss;
 use crate::collision::handle_collisions;
 use crate::constants::{
     ARENA_BORDER_COLOR, ARENA_BORDER_THICKNESS, ARENA_MARGIN_HEIGHT, ARENA_MARGIN_WIDTH, BACKGROUND,
-    BOMB_DURATION, HEIGHT,
+    BOMB_DURATION, FRAME_MASK_PAD, HEIGHT,
 };
 use crate::gfx::Shaders;
 use crate::input::Input;
@@ -130,7 +130,7 @@ impl Arena {
     // of each beam drawn past the edges. pad is generous so screen shake can't reveal a seam
     fn draw_frame_mask(&self) {
         let b = self.bounds;
-        let pad = 1000.0;
+        let pad = FRAME_MASK_PAD;
         draw_rectangle(b.x - pad, b.y - pad, pad, b.h + 2.0 * pad, BACKGROUND); // left
         draw_rectangle(b.x + b.w, b.y - pad, pad, b.h + 2.0 * pad, BACKGROUND); // right
         draw_rectangle(b.x - pad, b.y - pad, b.w + 2.0 * pad, pad, BACKGROUND); // top
