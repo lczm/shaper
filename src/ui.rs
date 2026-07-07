@@ -1,8 +1,8 @@
 use macroquad::prelude::*;
 
 use crate::constants::{
-    ARENA_BORDER_COLOR, HEALTH_BAR_BG_COLOR, HEALTH_BAR_CHIP_COLOR, HEALTH_BAR_FILL_COLOR,
-    HEALTH_BAR_HEIGHT, HEALTH_BAR_TOP_MARGIN, PLAYER_FIRE_INTERVAL, RESET_BANNER_FONT_SIZE,
+    ARENA_BORDER_COLOR, BANNER_FONT_SIZE, HEALTH_BAR_BG_COLOR, HEALTH_BAR_CHIP_COLOR,
+    HEALTH_BAR_FILL_COLOR, HEALTH_BAR_HEIGHT, HEALTH_BAR_TOP_MARGIN, PLAYER_FIRE_INTERVAL,
     UI_TEXT_COLOR,
 };
 use crate::state::GameState;
@@ -14,6 +14,7 @@ impl Ui {
         Ui
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn draw(
         &self,
         state: &GameState,
@@ -23,6 +24,7 @@ impl Ui {
         boss_displayed: f32,
         reset_banner: f32,
         lost_banner: f32,
+        paused: bool,
     ) {
         // use screen space camera
         set_default_camera();
@@ -61,32 +63,19 @@ impl Ui {
             UI_TEXT_COLOR,
         );
 
-        if reset_banner > 0.0 {
-            self.draw_reset_banner();
-        }
-
-        if lost_banner > 0.0 {
-            self.draw_lost_banner();
+        // the different banners
+        if paused {
+            self.draw_banner("Paused");
+        } else if reset_banner > 0.0 {
+            self.draw_banner("Reset");
+        } else if lost_banner > 0.0 {
+            self.draw_banner("Lost");
         }
     }
 
-    // visual reset banner
-    fn draw_reset_banner(&self) {
-        let label = "Reset";
-        let font_size = RESET_BANNER_FONT_SIZE;
-        let dims = measure_text(label, None, font_size as u16, 1.0);
-        draw_text(
-            label,
-            (screen_width() - dims.width) / 2.0,
-            (screen_height() + dims.height) / 2.0,
-            font_size,
-            UI_TEXT_COLOR,
-        );
-    }
-
-    fn draw_lost_banner(&self) {
-        let label = "Lost";
-        let font_size = RESET_BANNER_FONT_SIZE;
+    // full-screen centered text banner
+    fn draw_banner(&self, label: &str) {
+        let font_size = BANNER_FONT_SIZE;
         let dims = measure_text(label, None, font_size as u16, 1.0);
         draw_text(
             label,

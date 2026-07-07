@@ -134,10 +134,9 @@ pub const BOMB_DURATION: f32 = 0.16;
 pub const BOMB_BORDER_COLOR: Color = Color::new(0.85, 0.95, 1.0, 1.0); // bright pale cyan
 pub const BOMB_BORDER_THICKNESS: f32 = 3.0;
 
+pub const BANNER_FONT_SIZE: f32 = 96.0;
+
 // transient "Reset" banner shown centered on screen after an admin reset
 pub const RESET_BANNER_DURATION: f32 = 0.75;
-pub const RESET_BANNER_FONT_SIZE: f32 = 96.0;
-
 // lost banner
 pub const LOST_BANNER_DURATION: f32 = 0.75;
-pub const LOST_BANNER_FONT_SIZE: f32 = 96.0;

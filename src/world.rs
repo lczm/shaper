@@ -24,6 +24,13 @@ pub enum GameEvent {
     GameReset,
 }
 
+// whether the simulation is advancing or frozen
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum WorldState {
+    Running,
+    Paused,
+}
+
 // owns the per-frame plumbing (camera, timing, input) and the top-level pieces
 // (arena, stage, ui, state), and orchestrates the frame.
 pub struct World {
@@ -47,6 +54,8 @@ pub struct World {
     lost_banner: f32,
     // egui debug window, toggled with spacebar
     dev_ui: bool,
+    // paused freezes the simulation; rendering keeps going
+    world_state: WorldState,
 
     // drained every frame
     pub events: Vec<GameEvent>,
@@ -72,6 +81,7 @@ impl World {
             reset_banner: 0.0,
             lost_banner: 0.0,
             dev_ui: false,
+            world_state: WorldState::Running,
             events: Vec::new(),
         }
     }
@@ -93,25 +103,40 @@ impl World {
     }
 
     fn update(&mut self) {
+        // always refresh dt, even while paused: skipping it would leave
+        // last_time stale and feed the whole pause duration as one giant dt
+        // into the first running frame
         self.compute_dt();
+
+        // gather input here since World owns the camera (mouse -> world)
+        let input = Input::gather(&self.camera);
+
+        if input.escape_pressed {
+            self.world_state = match self.world_state {
+                WorldState::Running => WorldState::Paused,
+                WorldState::Paused => WorldState::Running,
+            };
+        }
+
+        // dev ui is a debug overlay; keep it usable while paused
+        if input.space_pressed {
+            self.dev_ui = !self.dev_ui;
+        }
+
+        // paused freezes everything below: shake, banner countdowns, reset,
+        // the simulation, and the event drain
+        if self.world_state == WorldState::Paused {
+            return;
+        }
 
         // decay/advance the shake before applying this frame's events: a fresh
         // hit then renders at full trauma. decaying afterwards would clip the
         // opening kick by one frame's worth of decay.
         self.shake.update(self.dt);
 
-        // count the reset banner down before applying events, so a reset this
-        // frame re-arms it to the full duration and shows at full this frame
+        // for any banners, count them down before applying events
         self.reset_banner = (self.reset_banner - self.dt).max(0.0);
-
         self.lost_banner = (self.lost_banner - self.dt).max(0.0);
-
-        // gather input here since World owns the camera (mouse -> world)
-        let input = Input::gather(&self.camera);
-
-        if input.space_pressed {
-            self.dev_ui = !self.dev_ui;
-        }
 
         if input.tilde_pressed {
             // reset the entire game state
@@ -185,6 +210,7 @@ impl World {
             self.arena.boss_displayed_health(),
             self.reset_banner,
             self.lost_banner,
+            self.world_state == WorldState::Paused,
         );
 
         // always render dev ui on top of everything else
