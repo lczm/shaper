@@ -1,10 +1,14 @@
 use macroquad::prelude::*;
 
 use crate::constants::{
-    BACKGROUND, BEAM_EDGE_OVERSHOOT, BOSS_AIM_STEP, BOSS_AIM_STEPS, BOSS_BEAM_INTERVAL, BOSS_COLOR,
-    BOSS_FIRE_INTERVAL, BOSS_HEIGHT, BOSS_IDLE_ROTATION_SPEED, BOSS_PROJECTILE_COLOR,
-    BOSS_PROJECTILE_COUNT, BOSS_SPINUP_DURATION, BOSS_SPINUP_HOLD, BOSS_SPINUP_PEAK_SPEED,
-    BOSS_SPINUP_RAMP_DOWN, BOSS_SPINUP_RAMP_UP, BOSS_WIDTH, HEALTH_BAR_DROP_SPEED, PROJECTILE_SPEED,
+    BACKGROUND, BEAM_EDGE_OVERSHOOT, BOSS_AIM_STEP, BOSS_AIM_STEPS, BOSS_BEAM_INTERVAL,
+    BOSS_CLUSTER_COUNT, BOSS_CLUSTER_INTRA_GAP, BOSS_CLUSTER_SHOTS, BOSS_COLOR, BOSS_FIRE_INTERVAL,
+    BOSS_HEIGHT, BOSS_IDLE_ROTATION_SPEED, BOSS_PROJECTILE_COLOR, BOSS_PROJECTILE_COUNT,
+    BOSS_SPECIAL_DURATION, BOSS_SPECIAL_FIRE_INTERVAL, BOSS_SPECIAL_HP_THRESHOLDS,
+    BOSS_SPECIAL_PROJECTILE_COLOR, BOSS_SPECIAL_PROJECTILE_SPEED, BOSS_SPECIAL_SPINUP_HOLD,
+    BOSS_SPECIAL_SWEEP_STEP, BOSS_SPINUP_DURATION, BOSS_SPINUP_HOLD, BOSS_SPINUP_PEAK_SPEED,
+    BOSS_SPINUP_RAMP_DOWN, BOSS_SPINUP_RAMP_UP, BOSS_WIDTH, HEALTH_BAR_DROP_SPEED,
+    PROJECTILE_SPEED,
 };
 use crate::projectile::{BeamProjectile, BulletProjectile, Projectile, ProjectileKind};
 use crate::shape::Rectangle;
@@ -43,10 +47,30 @@ impl IdleState {
     }
 }
 
+// this state does a spin up + spray some clusterd volleys
+// to add some variation for difficulty
+#[derive(Clone, Copy)]
+struct SpecialMoveState {
+    elapsed: f32,
+    fire_timer: f32,
+    volley: i32,
+}
+
+impl SpecialMoveState {
+    fn new() -> Self {
+        SpecialMoveState {
+            elapsed: 0.0,
+            fire_timer: BOSS_SPECIAL_FIRE_INTERVAL,
+            volley: 0,
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 enum BossState {
     Init(InitState),
     Idle(IdleState),
+    SpecialMove(SpecialMoveState),
     // future: Moving { .. }, Attacking { .. }, etc.
 }
 
@@ -63,6 +87,8 @@ pub struct Boss {
     total_health: i32,
     // displayed is the trailing chip value
     displayed_health: f32,
+    // used to track the special moves fired
+    special_moves_fired: usize,
 }
 
 impl Boss {
@@ -81,6 +107,7 @@ impl Boss {
             current_health: 1000,
             total_health: 1000,
             displayed_health: 1000.0,
+            special_moves_fired: 0,
         }
     }
 
@@ -89,16 +116,27 @@ impl Boss {
         // ease damage to current health
         self.update_displayed_health(dt);
 
+        // transition when its time to switch to a more difficult state
+        if matches!(self.state, BossState::Idle(_))
+            && self.special_moves_fired < BOSS_SPECIAL_HP_THRESHOLDS.len()
+            && (self.current_health as f32)
+                <= BOSS_SPECIAL_HP_THRESHOLDS[self.special_moves_fired] * self.total_health as f32
+        {
+            self.special_moves_fired += 1;
+            self.state = BossState::SpecialMove(SpecialMoveState::new());
+        }
+
         match self.state {
             BossState::Init(init) => self.update_init(dt, init, state),
             BossState::Idle(idle) => self.update_idle(dt, idle, state, bounds, player_pos),
+            BossState::SpecialMove(sm) => self.update_special_move(dt, sm, state),
         }
     }
 
     // spin up animation
     fn update_init(&mut self, dt: f32, mut init: InitState, state: &mut GameState) {
         init.elapsed += dt;
-        self.rotation += Self::spinup_speed(init.elapsed) * dt;
+        self.rotation += Self::spinup_speed(init.elapsed, BOSS_SPINUP_HOLD) * dt;
 
         if init.elapsed >= BOSS_SPINUP_DURATION {
             // the beam comes online once the spin settles
@@ -137,6 +175,31 @@ impl Boss {
         self.state = BossState::Idle(idle);
     }
 
+    // spin up while spraying
+    fn update_special_move(
+        &mut self,
+        dt: f32,
+        mut special_move: SpecialMoveState,
+        state: &mut GameState,
+    ) {
+        special_move.elapsed += dt;
+        self.rotation += Self::spinup_speed(special_move.elapsed, BOSS_SPECIAL_SPINUP_HOLD) * dt;
+
+        special_move.fire_timer -= dt;
+        if special_move.fire_timer <= 0.0 {
+            special_move.fire_timer += BOSS_SPECIAL_FIRE_INTERVAL;
+            // the sweep is a multiple of BOSS_SPECIAL_SWEEP_STEP, so the pattern drifts
+            self.fire_clusters(state, special_move.volley as f32 * BOSS_SPECIAL_SWEEP_STEP);
+            special_move.volley += 1;
+        }
+
+        if special_move.elapsed >= BOSS_SPECIAL_DURATION {
+            self.state = BossState::Idle(IdleState::new());
+        } else {
+            self.state = BossState::SpecialMove(special_move);
+        }
+    }
+
     // simple way to scale beams with health
     fn beam_count(&self) -> usize {
         let frac = self.current_health as f32 / self.total_health as f32;
@@ -165,8 +228,8 @@ impl Boss {
     }
 
     // accelerate, then hold and decelerate back to idle speed and transition to idle
-    fn spinup_speed(elapsed: f32) -> f32 {
-        let hold_end = BOSS_SPINUP_RAMP_UP + BOSS_SPINUP_HOLD;
+    fn spinup_speed(elapsed: f32, hold: f32) -> f32 {
+        let hold_end = BOSS_SPINUP_RAMP_UP + hold;
         let factor = if elapsed < BOSS_SPINUP_RAMP_UP {
             // 0 -> 1
             smoothstep(elapsed / BOSS_SPINUP_RAMP_UP) // 0 -> 1
@@ -215,6 +278,29 @@ impl Boss {
         }
     }
 
+    // clustered semi rings for some variety
+    // sweeps through the downward semicircle
+    fn fire_clusters(&self, state: &mut GameState, sweep: f32) {
+        // each cluster owns an equal slice of the semicircle
+        let slice = std::f32::consts::PI / BOSS_CLUSTER_COUNT as f32;
+        for c in 0..BOSS_CLUSTER_COUNT {
+            for j in 0..BOSS_CLUSTER_SHOTS {
+                // angles in (0, PI) all point downward (+y under the y-down camera)
+                let angle = (c as f32 * slice + j as f32 * BOSS_CLUSTER_INTRA_GAP + sweep)
+                    .rem_euclid(std::f32::consts::PI);
+                let dir = vec2(angle.cos(), angle.sin());
+                state
+                    .projectiles
+                    .push(Projectile::Bullet(BulletProjectile::new(
+                        self.position,
+                        dir * BOSS_SPECIAL_PROJECTILE_SPEED,
+                        ProjectileKind::Boss,
+                        BOSS_SPECIAL_PROJECTILE_COLOR,
+                    )));
+            }
+        }
+    }
+
     // spawn one full-length beam passing through the player along `angle`. the beam spans
     // the whole arena (overshooting the edges so the frame mask can hide the ends), and
     // because it goes through the player, standing still means getting hit
@@ -239,7 +325,8 @@ impl Boss {
         // `point` is the player, always inside the arena, so a valid chord always exists
         let mut t_min = f32::NEG_INFINITY;
         let mut t_max = f32::INFINITY;
-        for (p, d, edge_lo, edge_hi) in [(point.x, dir.x, lo.x, hi.x), (point.y, dir.y, lo.y, hi.y)] {
+        for (p, d, edge_lo, edge_hi) in [(point.x, dir.x, lo.x, hi.x), (point.y, dir.y, lo.y, hi.y)]
+        {
             if d.abs() > f32::EPSILON {
                 let mut t0 = (edge_lo - p) / d;
                 let mut t1 = (edge_hi - p) / d;
@@ -269,7 +356,7 @@ impl Boss {
     }
 
     pub fn is_invulnerable(&self) -> bool {
-        matches!(self.state, BossState::Init(_))
+        matches!(self.state, BossState::Init(_) | BossState::SpecialMove(_))
     }
 
     // chip drains smoothly towards current health

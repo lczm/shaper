@@ -2,7 +2,8 @@ use macroquad::prelude::*;
 
 use crate::arena::Arena;
 use crate::constants::{
-    BACKGROUND, HEIGHT, LOST_BANNER_DURATION, RESET_BANNER_DURATION, SHAKE_TRAUMA_PER_HIT, WIDTH,
+    BACKGROUND, HEIGHT, LOST_BANNER_DURATION, MAX_FRAME_DT, RESET_BANNER_DURATION,
+    SHAKE_TRAUMA_PER_HIT, WIDTH,
 };
 use crate::dev_ui;
 use crate::gfx::{Post, Shaders, Shake};
@@ -86,10 +87,12 @@ impl World {
         }
     }
 
-    // refresh dt from the time elapsed since the previous frame
+    // refresh dt from the time elapsed since the previous frame, clamped so a
+    // stutter frame can't teleport fast projectiles through the player
     fn compute_dt(&mut self) {
         let now = get_time();
-        self.dt = (now - self.last_time) as f32;
+        let raw = (now - self.last_time) as f32;
+        self.dt = raw.min(MAX_FRAME_DT);
         self.last_time = now;
     }
 
@@ -110,6 +113,12 @@ impl World {
 
         // gather input here since World owns the camera (mouse -> world)
         let input = Input::gather(&self.camera);
+
+        // for debugging
+        let pressed = get_keys_pressed();
+        if !pressed.is_empty() {
+            eprintln!("[debug] keys pressed this frame: {pressed:?}");
+        }
 
         if input.escape_pressed {
             self.world_state = match self.world_state {
@@ -139,6 +148,7 @@ impl World {
         self.lost_banner = (self.lost_banner - self.dt).max(0.0);
 
         if input.tilde_pressed {
+            eprintln!("[debug] tilde -> admin reset, showing the Reset banner");
             // reset the entire game state
             self.arena = Arena::new();
             self.state = GameState::new();
@@ -155,10 +165,12 @@ impl World {
             match event {
                 GameEvent::PlayerHit => {
                     self.state.lives = self.state.lives.saturating_sub(1);
+                    eprintln!("[debug] player hit, lives left: {}", self.state.lives);
                     self.arena.player_mut().register_hit();
                     self.shake.add_trauma(SHAKE_TRAUMA_PER_HIT);
 
                     if self.state.lives == 0 {
+                        eprintln!("[debug] out of lives -> full reset, showing the Lost banner");
                         // reset the entire game state
                         self.arena = Arena::new();
                         self.state = GameState::new();

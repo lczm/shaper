@@ -3,6 +3,12 @@ use macroquad::prelude::*;
 pub const WIDTH: f32 = 1280.0;
 pub const HEIGHT: f32 = 800.0;
 
+// longest simulation step a single frame may take, in seconds. stutter frames
+// (window drags, os hiccups) would otherwise teleport fast bullets far enough
+// to skip past the player in one step; clamping trades that teleport for a
+// brief slow-motion instead
+pub const MAX_FRAME_DT: f32 = 1.0 / 60.0;
+
 // color scheme
 pub const BACKGROUND: Color = Color::new(0.06, 0.07, 0.11, 1.0); // near-black navy
 pub const ARENA_BORDER_COLOR: Color = Color::new(0.42, 0.44, 0.72, 1.0); // soft indigo frame
@@ -16,6 +22,8 @@ pub const PLAYER_TRAIL_COLOR: Color = Color::new(0.45, 0.85, 0.85, 1.0); // dim 
 // boss colors
 pub const BOSS_COLOR: Color = Color::new(0.96, 0.28, 0.55, 1.0); // hot magenta-pink
 pub const BOSS_PROJECTILE_COLOR: Color = Color::new(1.0, 0.45, 0.30, 1.0); // warm coral
+// special-move bullets are a darker coral so they read as a different attack
+pub const BOSS_SPECIAL_PROJECTILE_COLOR: Color = Color::new(0.58, 0.24, 0.16, 1.0); // burnt coral
 
 // hud colors
 pub const UI_TEXT_COLOR: Color = Color::new(0.90, 0.92, 0.96, 1.0); // soft off-white
@@ -61,6 +69,21 @@ pub const BOSS_PROJECTILE_COUNT: usize = 15;
 // the turn lands exactly on a step boundary, reverses seamlessly.
 pub const BOSS_AIM_STEP: f32 = 0.12;
 pub const BOSS_AIM_STEPS: i32 = 3;
+
+// thresholds for the boss to trigger a difficult state
+pub const BOSS_SPECIAL_HP_THRESHOLDS: [f32; 3] = [0.8, 0.5, 0.3];
+// seconds between volleys in the clustered special move
+pub const BOSS_SPECIAL_FIRE_INTERVAL: f32 = 0.4;
+pub const BOSS_SPECIAL_SPINUP_HOLD: f32 = 2.0;
+// total duration of the special move
+pub const BOSS_SPECIAL_DURATION: f32 =
+    BOSS_SPINUP_RAMP_UP + BOSS_SPECIAL_SPINUP_HOLD + BOSS_SPINUP_RAMP_DOWN;
+pub const BOSS_CLUSTER_SHOTS: usize = 6;
+pub const BOSS_CLUSTER_COUNT: usize = 5;
+pub const BOSS_CLUSTER_INTRA_GAP: f32 = 0.08;
+pub const BOSS_SPECIAL_SWEEP_STEP: f32 = 0.12;
+// these projectiles should move faster so its harder
+pub const BOSS_SPECIAL_PROJECTILE_SPEED: f32 = 150.0;
 
 pub const PROJECTILE_RADIUS: f32 = 6.0;
 // travel speed in pixels per second

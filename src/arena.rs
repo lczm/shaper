@@ -4,8 +4,8 @@ use crate::bomb::Bomb;
 use crate::boss::Boss;
 use crate::collision::handle_collisions;
 use crate::constants::{
-    ARENA_BORDER_COLOR, ARENA_BORDER_THICKNESS, ARENA_MARGIN_HEIGHT, ARENA_MARGIN_WIDTH, BACKGROUND,
-    BOMB_DURATION, FRAME_MASK_PAD, HEIGHT,
+    ARENA_BORDER_COLOR, ARENA_BORDER_THICKNESS, ARENA_MARGIN_HEIGHT, ARENA_MARGIN_WIDTH,
+    BACKGROUND, BOMB_DURATION, FRAME_MASK_PAD, HEIGHT,
 };
 use crate::gfx::Shaders;
 use crate::input::Input;
@@ -82,7 +82,8 @@ impl Arena {
         self.player.update(dt, input, self.bounds, state, events);
 
         // boss may push some projectiles into the game state; it aims beams at the player
-        self.boss.update(dt, state, self.bounds, self.player.position);
+        self.boss
+            .update(dt, state, self.bounds, self.player.position);
 
         // update projectiles, some projectiles are beams or bullets
         // that has to go through their lifecycle
