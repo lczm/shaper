@@ -1,5 +1,6 @@
 use macroquad::prelude::*;
 
+use crate::collision::{circle_circle_overlap, segment_circle_overlap};
 use crate::constants::{
     BACKGROUND, BEAM_EDGE_OVERSHOOT, BEAM_WIDTH, BOSS_AIM_STEP, BOSS_AIM_STEPS, BOSS_BEAM_INTERVAL,
     BOSS_CLUSTER_COUNT, BOSS_CLUSTER_INTRA_GAP, BOSS_CLUSTER_SHOTS, BOSS_COLOR,
@@ -12,7 +13,6 @@ use crate::constants::{
     BOSS_SPINUP_RAMP_UP, BOSS_WIDTH, HEALTH_BAR_DROP_SPEED, HEIGHT, PROJECTILE_RADIUS,
     PROJECTILE_SPEED,
 };
-use crate::collision::{circle_circle_overlap, segment_circle_overlap};
 use crate::projectile::{BeamProjectile, BulletProjectile, Projectile, ProjectileKind};
 use crate::shape::Rectangle;
 use crate::state::GameState;
@@ -148,7 +148,7 @@ impl Boss {
             rotation: 0.0,
             current_health: BOSS_HEALTH,
             total_health: BOSS_HEALTH,
-            displayed_health: 1000.0,
+            displayed_health: BOSS_HEALTH as f32,
             special_moves_fired: 0,
         }
     }
