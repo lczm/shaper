@@ -18,7 +18,6 @@ pub struct BulletProjectile {
     pub position: Vec2,
     velocity: Vec2,
     circle: Circle,
-    color: Color,
     pub kind: ProjectileKind,
 }
 
@@ -30,7 +29,6 @@ impl BulletProjectile {
             position,
             velocity,
             circle,
-            color,
             kind,
         }
     }
@@ -51,7 +49,7 @@ impl BulletProjectile {
     }
 
     pub fn draw(&self) {
-        self.circle.draw_colored(self.position, self.color, 1.0);
+        self.circle.draw(self.position, 1.0);
     }
 }
 

@@ -32,7 +32,7 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    // todo maybe add some seeding in the future but i dont feel like thats important
+    // seed the rng from the current time so each run is different
     macroquad::rand::srand(macroquad::miniquad::date::now() as u64);
 
     World::new().run().await;

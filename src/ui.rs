@@ -2,8 +2,8 @@ use macroquad::prelude::*;
 
 use crate::constants::{
     ARENA_BORDER_COLOR, BANNER_FONT_SIZE, HEALTH_BAR_BG_COLOR, HEALTH_BAR_CHIP_COLOR,
-    HEALTH_BAR_FILL_COLOR, HEALTH_BAR_HEIGHT, HEALTH_BAR_TOP_MARGIN, PLAYER_FIRE_INTERVAL,
-    UI_TEXT_COLOR,
+    HEALTH_BAR_FILL_COLOR, HEALTH_BAR_HEIGHT, HEALTH_BAR_TOP_MARGIN, HEIGHT, PLAYER_FIRE_INTERVAL,
+    UI_TEXT_COLOR, WIDTH,
 };
 use crate::state::GameState;
 
@@ -27,40 +27,55 @@ impl Ui {
         game_over_banner: f32,
         paused: bool,
     ) {
+        let sx = screen_width() / WIDTH;
+        let sy = screen_height() / HEIGHT;
+
         // use screen space camera
         set_default_camera();
 
         // boss health bar across the top, aligned over the arena
-        self.draw_boss_health(bounds, boss_health.0, boss_health.1, boss_displayed);
+        self.draw_boss_health(bounds, boss_health.0, boss_health.1, boss_displayed, sx, sy);
 
-        let x = bounds.right() + 40.0;
-        let mut y = bounds.y + 40.0;
-        draw_text(format!("Lives: {}", state.lives), x, y, 32.0, UI_TEXT_COLOR);
+        let x = bounds.right() * sx + 40.0 * sx;
+        let mut y = bounds.y * sy + 40.0 * sy;
+        draw_text(
+            format!("Lives: {}", state.lives),
+            x,
+            y,
+            32.0 * sx,
+            UI_TEXT_COLOR,
+        );
 
-        y += 40.0;
-        draw_text(format!("Bombs: {}", state.bombs), x, y, 32.0, UI_TEXT_COLOR);
+        y += 40.0 * sy;
+        draw_text(
+            format!("Bombs: {}", state.bombs),
+            x,
+            y,
+            32.0 * sx,
+            UI_TEXT_COLOR,
+        );
 
         // separator line
-        y += 24.0;
-        draw_line(x, y, x + 500.0, y, 2.0, ARENA_BORDER_COLOR);
+        y += 24.0 * sy;
+        draw_line(x, y, x + 500.0 * sx, y, 2.0 * sx, ARENA_BORDER_COLOR);
 
         // weapon stats
-        y += 36.0;
+        y += 36.0 * sy;
         draw_text(
             format!("Damage : {player_damage}"),
             x,
             y,
-            32.0,
+            32.0 * sx,
             UI_TEXT_COLOR,
         );
 
-        y += 40.0;
+        y += 40.0 * sy;
         let fire_rate = 1.0 / PLAYER_FIRE_INTERVAL;
         draw_text(
             format!("Fire rate : {fire_rate:.1}/s"),
             x,
             y,
-            32.0,
+            32.0 * sx,
             UI_TEXT_COLOR,
         );
 
@@ -78,7 +93,8 @@ impl Ui {
 
     // full-screen centered text banner
     fn draw_banner(&self, label: &str) {
-        let font_size = BANNER_FONT_SIZE;
+        let sx = screen_width() / WIDTH;
+        let font_size = BANNER_FONT_SIZE * sx;
         let dims = measure_text(label, None, font_size as u16, 1.0);
         draw_text(
             label,
@@ -89,11 +105,19 @@ impl Ui {
         );
     }
 
-    fn draw_boss_health(&self, bounds: Rect, current: i32, total: i32, displayed: f32) {
-        let x = bounds.x;
-        let w = bounds.w;
-        let y = HEALTH_BAR_TOP_MARGIN;
-        let h = HEALTH_BAR_HEIGHT;
+    fn draw_boss_health(
+        &self,
+        bounds: Rect,
+        current: i32,
+        total: i32,
+        displayed: f32,
+        sx: f32,
+        sy: f32,
+    ) {
+        let x = bounds.x * sx;
+        let w = bounds.w * sx;
+        let y = HEALTH_BAR_TOP_MARGIN * sy;
+        let h = HEALTH_BAR_HEIGHT * sy;
 
         // red snaps to the current health, chip trails behind at the displayed health
         let frac = |v: f32| {
@@ -125,17 +149,17 @@ impl Ui {
         draw_rectangle(x, y, w * cur_frac, h, HEALTH_BAR_FILL_COLOR);
 
         // outline on top of the fill
-        draw_rectangle_lines(x, y, w, h, 2.0, ARENA_BORDER_COLOR);
+        draw_rectangle_lines(x, y, w, h, 2.0 * sx, ARENA_BORDER_COLOR);
 
         // current / total centered in the bar
         let label = format!("{current} / {total}");
-        let font_size: u16 = 20;
-        let dims = measure_text(&label, None, font_size, 1.0);
+        let font_size: f32 = 20.0 * sx;
+        let dims = measure_text(&label, None, font_size as u16, 1.0);
         draw_text(
             &label,
             x + (w - dims.width) / 2.0,
             y + (h + dims.height) / 2.0,
-            font_size as f32,
+            font_size,
             UI_TEXT_COLOR,
         );
     }

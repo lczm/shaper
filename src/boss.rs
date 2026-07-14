@@ -4,12 +4,13 @@ use crate::constants::{
     BACKGROUND, BEAM_EDGE_OVERSHOOT, BEAM_WIDTH, BOSS_AIM_STEP, BOSS_AIM_STEPS, BOSS_BEAM_INTERVAL,
     BOSS_CLUSTER_COUNT, BOSS_CLUSTER_INTRA_GAP, BOSS_CLUSTER_SHOTS, BOSS_COLOR,
     BOSS_DEATH_BURST_COLOR, BOSS_DEATH_BURST_SPEED, BOSS_DEATH_BURST_THICKNESS, BOSS_DEATH_GRAVITY,
-    BOSS_DEATH_INITIAL_DROP_SPEED, BOSS_DEATH_SPIN_HOLD, BOSS_FIRE_INTERVAL, BOSS_HEIGHT,
-    BOSS_IDLE_ROTATION_SPEED, BOSS_PROJECTILE_COLOR, BOSS_PROJECTILE_COUNT, BOSS_SPECIAL_DURATION,
-    BOSS_SPECIAL_FIRE_INTERVAL, BOSS_SPECIAL_PROJECTILE_COLOR, BOSS_SPECIAL_PROJECTILE_SPEED,
-    BOSS_SPECIAL_SPINUP_HOLD, BOSS_SPECIAL_SWEEP_STEP, BOSS_SPINUP_DURATION, BOSS_SPINUP_HOLD,
-    BOSS_SPINUP_PEAK_SPEED, BOSS_SPINUP_RAMP_DOWN, BOSS_SPINUP_RAMP_UP, BOSS_WIDTH,
-    HEALTH_BAR_DROP_SPEED, HEIGHT, PROJECTILE_RADIUS, PROJECTILE_SPEED,
+    BOSS_DEATH_INITIAL_DROP_SPEED, BOSS_DEATH_SPIN_HOLD, BOSS_FIRE_INTERVAL, BOSS_HEALTH,
+    BOSS_HEIGHT, BOSS_IDLE_ROTATION_SPEED, BOSS_PROJECTILE_COLOR, BOSS_PROJECTILE_COUNT,
+    BOSS_SPECIAL_DURATION, BOSS_SPECIAL_FIRE_INTERVAL, BOSS_SPECIAL_PROJECTILE_COLOR,
+    BOSS_SPECIAL_PROJECTILE_SPEED, BOSS_SPECIAL_SPINUP_HOLD, BOSS_SPECIAL_SWEEP_STEP,
+    BOSS_SPINUP_DURATION, BOSS_SPINUP_HOLD, BOSS_SPINUP_PEAK_SPEED, BOSS_SPINUP_RAMP_DOWN,
+    BOSS_SPINUP_RAMP_UP, BOSS_WIDTH, HEALTH_BAR_DROP_SPEED, HEIGHT, PROJECTILE_RADIUS,
+    PROJECTILE_SPEED,
 };
 use crate::collision::{circle_circle_overlap, segment_circle_overlap};
 use crate::projectile::{BeamProjectile, BulletProjectile, Projectile, ProjectileKind};
@@ -145,8 +146,8 @@ impl Boss {
             mask,
             state: BossState::Init(InitState::new()),
             rotation: 0.0,
-            current_health: 1000,
-            total_health: 1000,
+            current_health: BOSS_HEALTH,
+            total_health: BOSS_HEALTH,
             displayed_health: 1000.0,
             special_moves_fired: 0,
         }
@@ -392,7 +393,7 @@ impl Boss {
     fn fire_ring(&self, state: &mut GameState, aim_offset: f32) {
         for i in 0..BOSS_PROJECTILE_COUNT {
             // angles in (0, PI) all point downward (+y under the y-down camera);
-            // adding the offset sweeps each shot further to the left
+            // adding the offset sweeps each volley's volley left/right in a triangle wave
             let base = std::f32::consts::PI * (i as f32 + 0.5) / BOSS_PROJECTILE_COUNT as f32;
             let angle = base + aim_offset;
             let dir = vec2(angle.cos(), angle.sin());

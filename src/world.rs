@@ -64,7 +64,7 @@ pub struct World {
     world_state: WorldState,
 
     // drained every frame
-    pub events: Vec<GameEvent>,
+    events: Vec<GameEvent>,
 }
 
 impl World {
@@ -120,12 +120,6 @@ impl World {
         // gather input here since World owns the camera (mouse -> world)
         let input = Input::gather(&self.camera);
 
-        // for debugging
-        let pressed = get_keys_pressed();
-        if !pressed.is_empty() {
-            eprintln!("[debug] keys pressed this frame: {pressed:?}");
-        }
-
         if input.escape_pressed {
             self.world_state = match self.world_state {
                 WorldState::Running => WorldState::Paused,
@@ -155,7 +149,6 @@ impl World {
         self.game_over_banner = (self.game_over_banner - self.dt).max(0.0);
 
         if input.tilde_pressed {
-            eprintln!("[debug] tilde -> admin reset, showing the Reset banner");
             // reset the entire game state
             self.arena = Arena::new();
             self.state = GameState::new();
@@ -172,12 +165,10 @@ impl World {
             match event {
                 GameEvent::PlayerHit => {
                     self.state.lives = self.state.lives.saturating_sub(1);
-                    eprintln!("[debug] player hit, lives left: {}", self.state.lives);
                     self.arena.player_mut().register_hit();
                     self.shake.add_trauma(SHAKE_TRAUMA_PER_HIT);
 
                     if self.state.lives == 0 {
-                        eprintln!("[debug] out of lives -> full reset, showing the Lost banner");
                         // reset the entire game state
                         self.arena = Arena::new();
                         self.state = GameState::new();
@@ -197,7 +188,6 @@ impl World {
                     self.reset_banner = RESET_BANNER_DURATION;
                 }
                 GameEvent::GameOver => {
-                    eprintln!("[debug] boss defeated -> showing the Game Over banner");
                     self.game_over_banner = GAME_OVER_BANNER_DURATION;
                 }
             }

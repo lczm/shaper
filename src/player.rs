@@ -132,11 +132,10 @@ impl Player {
 
     // continuously shoot straight up on a fixed cadence
     fn fire(&mut self, dt: f32, state: &mut GameState) {
-        if self.fire_timer > 0.0 {
-            self.fire_timer -= dt;
-        }
+        self.fire_timer -= dt;
         if self.fire_timer <= 0.0 {
-            self.fire_timer = self.fire_interval;
+            // keep the overshoot remainder so cadence doesnt drift
+            self.fire_timer += self.fire_interval;
             // continuously spawn new bullet projectile from the player position upwards
             state
                 .projectiles
