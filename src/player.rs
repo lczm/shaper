@@ -3,8 +3,8 @@ use macroquad::prelude::*;
 use crate::constants::{
     ARENA_BORDER_THICKNESS, HIT_INVULN_DURATION, PHASE_DISTANCE, PHASE_DURATION,
     PHASE_GHOST_OPACITY, PHASE_MIN_OPACITY, PHASE_TRAIL_LENGTH, PLAYER_CIRCLE_RADIUS, PLAYER_COLOR,
-    PLAYER_FIRE_INTERVAL, PLAYER_PHASING_COLOR, PLAYER_PROJECTILE_COLOR, PLAYER_PROJECTILE_SPEED,
-    PLAYER_SPEED, PLAYER_TRAIL_COLOR,
+    PLAYER_DEV_CHEAT_FIRE_INTERVAL, PLAYER_FIRE_INTERVAL, PLAYER_PHASING_COLOR,
+    PLAYER_PROJECTILE_COLOR, PLAYER_PROJECTILE_SPEED, PLAYER_SPEED, PLAYER_TRAIL_COLOR,
 };
 use crate::input::Input;
 use crate::projectile::{BulletProjectile, Projectile, ProjectileKind};
@@ -27,6 +27,8 @@ pub struct Player {
     trail: Vec<Vec2>,
     // counts down to the next shot
     fire_timer: f32,
+    // interval the fire timer resets to after each shot
+    fire_interval: f32,
     // post-hit invulnerability window; counts down to 0
     hit_cooldown: f32,
     damage: i32,
@@ -40,6 +42,7 @@ impl Player {
             state: PlayerState::Normal,
             trail: Vec::new(),
             fire_timer: 0.0,
+            fire_interval: PLAYER_FIRE_INTERVAL,
             hit_cooldown: 0.0,
             damage: 5,
         }
@@ -133,7 +136,7 @@ impl Player {
             self.fire_timer -= dt;
         }
         if self.fire_timer <= 0.0 {
-            self.fire_timer = PLAYER_FIRE_INTERVAL;
+            self.fire_timer = self.fire_interval;
             // continuously spawn new bullet projectile from the player position upwards
             state
                 .projectiles
@@ -193,6 +196,11 @@ impl Player {
     // already-longer cooldown
     pub fn grant_invulnerability(&mut self, duration: f32) {
         self.hit_cooldown = self.hit_cooldown.max(duration);
+    }
+
+    pub fn dev_damage_boost(&mut self) {
+        self.fire_interval = PLAYER_DEV_CHEAT_FIRE_INTERVAL;
+        self.fire_timer = self.fire_interval;
     }
 
     pub fn draw(&self) {

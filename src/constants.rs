@@ -34,10 +34,11 @@ pub const ARENA_MARGIN_WIDTH: f32 = 80.0;
 pub const ARENA_MARGIN_HEIGHT: f32 = 40.0;
 pub const ARENA_BORDER_THICKNESS: f32 = 2.0;
 
-pub const PLAYER_CIRCLE_RADIUS: f32 = 10.0;
-pub const PLAYER_SPEED: f32 = 300.0;
+pub const PLAYER_CIRCLE_RADIUS: f32 = 8.0;
+pub const PLAYER_SPEED: f32 = 200.0;
 // seconds between player shots (the player fires continuously)
-pub const PLAYER_FIRE_INTERVAL: f32 = 0.12;
+pub const PLAYER_FIRE_INTERVAL: f32 = 0.20;
+pub const PLAYER_DEV_CHEAT_FIRE_INTERVAL: f32 = 0.05;
 // upward travel speed of player bullets in pixels per second
 pub const PLAYER_PROJECTILE_SPEED: f32 = 450.0;
 
@@ -63,10 +64,6 @@ pub const BOSS_SPINUP_DURATION: f32 =
 pub const BOSS_FIRE_INTERVAL: f32 = 0.5;
 // number of projectiles in each all-directions burst
 pub const BOSS_PROJECTILE_COUNT: usize = 15;
-// the fan's aim ping-pongs left/right, one step per volley. BOSS_AIM_STEP is the
-// per-volley angle change (~7 degrees); BOSS_AIM_STEPS is how many steps it takes
-// to reach each extreme. so the sweep spans +/- (STEP * STEPS) radians and, because
-// the turn lands exactly on a step boundary, reverses seamlessly.
 pub const BOSS_AIM_STEP: f32 = 0.12;
 pub const BOSS_AIM_STEPS: i32 = 3;
 
@@ -78,7 +75,7 @@ pub const BOSS_SPECIAL_DURATION: f32 =
     BOSS_SPINUP_RAMP_UP + BOSS_SPECIAL_SPINUP_HOLD + BOSS_SPINUP_RAMP_DOWN;
 pub const BOSS_CLUSTER_SHOTS: usize = 6;
 pub const BOSS_CLUSTER_COUNT: usize = 5;
-pub const BOSS_CLUSTER_INTRA_GAP: f32 = 0.08;
+pub const BOSS_CLUSTER_INTRA_GAP: f32 = 0.11;
 pub const BOSS_SPECIAL_SWEEP_STEP: f32 = 0.12;
 // these projectiles should move faster so its harder
 pub const BOSS_SPECIAL_PROJECTILE_SPEED: f32 = 150.0;

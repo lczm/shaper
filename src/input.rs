@@ -13,6 +13,7 @@ pub struct Input {
     pub tilde_pressed: bool,
     pub space_pressed: bool,
     pub escape_pressed: bool,
+    pub f1_pressed: bool,
 
     // mouse and left click
     pub mouse: Vec2,
@@ -33,6 +34,7 @@ impl Input {
             tilde_pressed: is_key_pressed(KeyCode::GraveAccent),
             space_pressed: is_key_pressed(KeyCode::Space),
             escape_pressed: is_key_pressed(KeyCode::Escape),
+            f1_pressed: is_key_pressed(KeyCode::F1),
             mouse: camera.screen_to_world(mouse_position().into()),
             primary_pressed: is_mouse_button_pressed(MouseButton::Left),
         }
