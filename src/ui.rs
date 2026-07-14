@@ -24,6 +24,7 @@ impl Ui {
         boss_displayed: f32,
         reset_banner: f32,
         lost_banner: f32,
+        game_over_banner: f32,
         paused: bool,
     ) {
         // use screen space camera
@@ -70,6 +71,8 @@ impl Ui {
             self.draw_banner("Reset");
         } else if lost_banner > 0.0 {
             self.draw_banner("Lost");
+        } else if game_over_banner > 0.0 {
+            self.draw_banner("Game Over");
         }
     }
 

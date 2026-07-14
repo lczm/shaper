@@ -60,6 +60,21 @@ pub const BOSS_SPINUP_RAMP_DOWN: f32 = 1.5;
 pub const BOSS_SPINUP_DURATION: f32 =
     BOSS_SPINUP_RAMP_UP + BOSS_SPINUP_HOLD + BOSS_SPINUP_RAMP_DOWN;
 
+// death burst: a ring that expands from the boss center out past the arena
+// edges, deleting every projectile it sweeps over before the boss falls.
+// radius growth in px/s
+pub const BOSS_DEATH_BURST_SPEED: f32 = 1600.0;
+pub const BOSS_DEATH_BURST_COLOR: Color = Color::new(0.85, 0.95, 1.0, 1.0); // bright pale cyan
+pub const BOSS_DEATH_BURST_THICKNESS: f32 = 5.0;
+
+// death animation: the boss spins up and falls off the bottom of the screen.
+// long hold so it keeps spinning at peak speed the whole way down
+pub const BOSS_DEATH_SPIN_HOLD: f32 = 5.0;
+// downward acceleration of the fall (px/s^2)
+pub const BOSS_DEATH_GRAVITY: f32 = 1200.0;
+// initial downward speed when the death drop begins (px/s)
+pub const BOSS_DEATH_INITIAL_DROP_SPEED: f32 = 30.0;
+
 // seconds between shots while the boss is idle
 pub const BOSS_FIRE_INTERVAL: f32 = 0.5;
 // number of projectiles in each all-directions burst
@@ -158,3 +173,5 @@ pub const BANNER_FONT_SIZE: f32 = 96.0;
 pub const RESET_BANNER_DURATION: f32 = 0.75;
 // lost banner
 pub const LOST_BANNER_DURATION: f32 = 0.75;
+// shown once the boss finishes its death animation
+pub const GAME_OVER_BANNER_DURATION: f32 = 0.75;

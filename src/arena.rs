@@ -87,7 +87,7 @@ impl Arena {
 
         // boss may push some projectiles into the game state; it aims beams at the player
         self.boss
-            .update(dt, state, self.bounds, self.player.position);
+            .update(dt, state, self.bounds, self.player.position, events);
 
         // update projectiles, some projectiles are beams or bullets
         // that has to go through their lifecycle

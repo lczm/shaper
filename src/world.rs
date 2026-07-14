@@ -2,8 +2,8 @@ use macroquad::prelude::*;
 
 use crate::arena::Arena;
 use crate::constants::{
-    BACKGROUND, HEIGHT, LOST_BANNER_DURATION, MAX_FRAME_DT, RESET_BANNER_DURATION,
-    SHAKE_TRAUMA_PER_HIT, WIDTH,
+    BACKGROUND, GAME_OVER_BANNER_DURATION, HEIGHT, LOST_BANNER_DURATION, MAX_FRAME_DT,
+    RESET_BANNER_DURATION, SHAKE_TRAUMA_PER_HIT, WIDTH,
 };
 use crate::dev_ui;
 use crate::gfx::{Post, Shaders, Shake};
@@ -23,6 +23,9 @@ pub enum GameEvent {
     // pushed when (admin) resets the game state, to help render a
     // text to visually indicate the rest
     GameReset,
+
+    // pushed when the boss finishes its death animation
+    GameOver,
 }
 
 // whether the simulation is advancing or frozen
@@ -53,6 +56,8 @@ pub struct World {
     reset_banner: f32,
     // seconds remaining on the centered "Lost" banner
     lost_banner: f32,
+    // seconds remaining on the centered "Game Over" banner
+    game_over_banner: f32,
     // egui debug window, toggled with spacebar
     dev_ui: bool,
     // paused freezes the simulation; rendering keeps going
@@ -81,6 +86,7 @@ impl World {
             shake: Shake::new(),
             reset_banner: 0.0,
             lost_banner: 0.0,
+            game_over_banner: 0.0,
             dev_ui: false,
             world_state: WorldState::Running,
             events: Vec::new(),
@@ -146,6 +152,7 @@ impl World {
         // for any banners, count them down before applying events
         self.reset_banner = (self.reset_banner - self.dt).max(0.0);
         self.lost_banner = (self.lost_banner - self.dt).max(0.0);
+        self.game_over_banner = (self.game_over_banner - self.dt).max(0.0);
 
         if input.tilde_pressed {
             eprintln!("[debug] tilde -> admin reset, showing the Reset banner");
@@ -189,6 +196,10 @@ impl World {
                 GameEvent::GameReset => {
                     self.reset_banner = RESET_BANNER_DURATION;
                 }
+                GameEvent::GameOver => {
+                    eprintln!("[debug] boss defeated -> showing the Game Over banner");
+                    self.game_over_banner = GAME_OVER_BANNER_DURATION;
+                }
             }
         }
     }
@@ -222,6 +233,7 @@ impl World {
             self.arena.boss_displayed_health(),
             self.reset_banner,
             self.lost_banner,
+            self.game_over_banner,
             self.world_state == WorldState::Paused,
         );
 

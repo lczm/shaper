@@ -1,18 +1,22 @@
 use macroquad::prelude::*;
 
 use crate::constants::{
-    BACKGROUND, BEAM_EDGE_OVERSHOOT, BOSS_AIM_STEP, BOSS_AIM_STEPS, BOSS_BEAM_INTERVAL,
-    BOSS_CLUSTER_COUNT, BOSS_CLUSTER_INTRA_GAP, BOSS_CLUSTER_SHOTS, BOSS_COLOR, BOSS_FIRE_INTERVAL,
-    BOSS_HEIGHT, BOSS_IDLE_ROTATION_SPEED, BOSS_PROJECTILE_COLOR, BOSS_PROJECTILE_COUNT,
-    BOSS_SPECIAL_DURATION, BOSS_SPECIAL_FIRE_INTERVAL, BOSS_SPECIAL_PROJECTILE_COLOR,
-    BOSS_SPECIAL_PROJECTILE_SPEED, BOSS_SPECIAL_SPINUP_HOLD, BOSS_SPECIAL_SWEEP_STEP,
-    BOSS_SPINUP_DURATION, BOSS_SPINUP_HOLD, BOSS_SPINUP_PEAK_SPEED, BOSS_SPINUP_RAMP_DOWN,
-    BOSS_SPINUP_RAMP_UP, BOSS_WIDTH, HEALTH_BAR_DROP_SPEED, PROJECTILE_SPEED,
+    BACKGROUND, BEAM_EDGE_OVERSHOOT, BEAM_WIDTH, BOSS_AIM_STEP, BOSS_AIM_STEPS, BOSS_BEAM_INTERVAL,
+    BOSS_CLUSTER_COUNT, BOSS_CLUSTER_INTRA_GAP, BOSS_CLUSTER_SHOTS, BOSS_COLOR,
+    BOSS_DEATH_BURST_COLOR, BOSS_DEATH_BURST_SPEED, BOSS_DEATH_BURST_THICKNESS, BOSS_DEATH_GRAVITY,
+    BOSS_DEATH_INITIAL_DROP_SPEED, BOSS_DEATH_SPIN_HOLD, BOSS_FIRE_INTERVAL, BOSS_HEIGHT,
+    BOSS_IDLE_ROTATION_SPEED, BOSS_PROJECTILE_COLOR, BOSS_PROJECTILE_COUNT, BOSS_SPECIAL_DURATION,
+    BOSS_SPECIAL_FIRE_INTERVAL, BOSS_SPECIAL_PROJECTILE_COLOR, BOSS_SPECIAL_PROJECTILE_SPEED,
+    BOSS_SPECIAL_SPINUP_HOLD, BOSS_SPECIAL_SWEEP_STEP, BOSS_SPINUP_DURATION, BOSS_SPINUP_HOLD,
+    BOSS_SPINUP_PEAK_SPEED, BOSS_SPINUP_RAMP_DOWN, BOSS_SPINUP_RAMP_UP, BOSS_WIDTH,
+    HEALTH_BAR_DROP_SPEED, HEIGHT, PROJECTILE_RADIUS, PROJECTILE_SPEED,
 };
+use crate::collision::{circle_circle_overlap, segment_circle_overlap};
 use crate::projectile::{BeamProjectile, BulletProjectile, Projectile, ProjectileKind};
 use crate::shape::Rectangle;
 use crate::state::GameState;
 use crate::utils::smoothstep;
+use crate::world::GameEvent;
 
 const BOSS_SPECIAL_HP_THRESHOLDS: [f32; 3] = [0.8, 0.5, 0.3];
 
@@ -67,11 +71,47 @@ impl SpecialMoveState {
     }
 }
 
+// when health hits zero, a ring expands from the boss center out over the whole
+// arena, deleting every projectile it touches. runs before the fall
+#[derive(Clone, Copy)]
+struct DeathBurstState {
+    radius: f32,
+}
+
+impl DeathBurstState {
+    fn new() -> Self {
+        DeathBurstState { radius: 0.0 }
+    }
+}
+
+// after the burst clears the field the boss spins up and falls off the bottom
+// of the screen; fall_speed accelerates under gravity as it drops
+#[derive(Clone, Copy)]
+struct DyingState {
+    elapsed: f32,
+    fall_speed: f32,
+}
+
+impl DyingState {
+    fn new() -> Self {
+        DyingState {
+            elapsed: 0.0,
+            fall_speed: BOSS_DEATH_INITIAL_DROP_SPEED,
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 enum BossState {
     Init(InitState),
     Idle(IdleState),
     SpecialMove(SpecialMoveState),
+    // expanding ring clearing the field right after health reaches zero
+    DeathBurst(DeathBurstState),
+    // spinning and dropping off-screen after the burst clears
+    Dying(DyingState),
+    // animation finished; the boss is gone and no longer drawn or updated
+    Dead,
     // future: Moving { .. }, Attacking { .. }, etc.
 }
 
@@ -113,9 +153,27 @@ impl Boss {
     }
 
     // match state and delegate to the appropriate update function
-    pub fn update(&mut self, dt: f32, state: &mut GameState, bounds: Rect, player_pos: Vec2) {
+    pub fn update(
+        &mut self,
+        dt: f32,
+        state: &mut GameState,
+        bounds: Rect,
+        player_pos: Vec2,
+        events: &mut Vec<GameEvent>,
+    ) {
         // ease damage to current health
         self.update_displayed_health(dt);
+
+        // death takes priority over everything: once health is gone, kick off
+        // the death sequence (burst -> fall) unless it's already under way
+        if self.current_health == 0
+            && !matches!(
+                self.state,
+                BossState::DeathBurst(_) | BossState::Dying(_) | BossState::Dead
+            )
+        {
+            self.state = BossState::DeathBurst(DeathBurstState::new());
+        }
 
         // transition when its time to switch to a more difficult state
         if matches!(self.state, BossState::Idle(_)) {
@@ -132,6 +190,10 @@ impl Boss {
             BossState::Init(init) => self.update_init(dt, init, state),
             BossState::Idle(idle) => self.update_idle(dt, idle, state, bounds, player_pos),
             BossState::SpecialMove(sm) => self.update_special_move(dt, sm, state),
+            BossState::DeathBurst(burst) => self.update_death_burst(dt, burst, state, bounds),
+            BossState::Dying(dying) => self.update_dying(dt, dying, events),
+            // nothing left to do once the boss is gone
+            BossState::Dead => {}
         }
     }
 
@@ -199,6 +261,71 @@ impl Boss {
             self.state = BossState::Idle(IdleState::new());
         } else {
             self.state = BossState::SpecialMove(special_move);
+        }
+    }
+
+    // death burst: grow the ring outward from the boss center, deleting every
+    // projectile it has swept over. once it covers the whole arena, start the fall
+    fn update_death_burst(
+        &mut self,
+        dt: f32,
+        mut burst: DeathBurstState,
+        state: &mut GameState,
+        bounds: Rect,
+    ) {
+        burst.radius += BOSS_DEATH_BURST_SPEED * dt;
+
+        // wipe any projectile the ring has reached (inside the current radius)
+        let center = self.position;
+        let r = burst.radius;
+        state.projectiles.retain(|p| match p {
+            Projectile::Bullet(b) => {
+                !circle_circle_overlap(b.position, PROJECTILE_RADIUS, center, r)
+            }
+            Projectile::Beam(beam) => {
+                !segment_circle_overlap(beam.start, beam.end, BEAM_WIDTH / 2.0, center, r)
+            }
+        });
+
+        // done once the ring has passed the farthest arena corner
+        if burst.radius >= Self::max_burst_radius(center, bounds) {
+            self.state = BossState::Dying(DyingState::new());
+        } else {
+            self.state = BossState::DeathBurst(burst);
+        }
+    }
+
+    // distance from the burst center to the farthest arena corner, so the ring
+    // is guaranteed to cover the entire arena before the fall begins
+    fn max_burst_radius(center: Vec2, bounds: Rect) -> f32 {
+        [
+            vec2(bounds.x, bounds.y),
+            vec2(bounds.x + bounds.w, bounds.y),
+            vec2(bounds.x, bounds.y + bounds.h),
+            vec2(bounds.x + bounds.w, bounds.y + bounds.h),
+        ]
+        .iter()
+        .map(|corner| center.distance(*corner))
+        .fold(0.0, f32::max)
+    }
+
+    // death: keep spinning at peak speed while accelerating off the bottom of
+    // the screen. once fully below the screen, fire the game over event and go dead
+    fn update_dying(&mut self, dt: f32, mut dying: DyingState, events: &mut Vec<GameEvent>) {
+        dying.elapsed += dt;
+        // long hold keeps the spin pinned near peak speed the whole way down
+        self.rotation += Self::spinup_speed(dying.elapsed, BOSS_DEATH_SPIN_HOLD) * dt;
+
+        // gravity-driven fall
+        dying.fall_speed += BOSS_DEATH_GRAVITY * dt;
+        self.position.y += dying.fall_speed * dt;
+
+        // fully past the bottom edge (BOSS_HEIGHT of margin so the whole body clears)
+        if self.position.y - BOSS_HEIGHT > HEIGHT {
+            events.push(GameEvent::GameOver);
+            self.state = BossState::Dead;
+        } else {
+            self.state = BossState::Dying(dying);
         }
     }
 
@@ -358,7 +485,14 @@ impl Boss {
     }
 
     pub fn is_invulnerable(&self) -> bool {
-        matches!(self.state, BossState::Init(_) | BossState::SpecialMove(_))
+        matches!(
+            self.state,
+            BossState::Init(_)
+                | BossState::SpecialMove(_)
+                | BossState::DeathBurst(_)
+                | BossState::Dying(_)
+                | BossState::Dead
+        )
     }
 
     // chip drains smoothly towards current health
@@ -377,8 +511,23 @@ impl Boss {
     }
 
     pub fn draw(&self) {
+        // once dead the boss is gone entirely
+        if matches!(self.state, BossState::Dead) {
+            return;
+        }
         // draw the mask first then the boss
         self.mask.draw_rotated(self.position, self.rotation, 1.0);
         self.rect.draw_rotated(self.position, self.rotation, 1.0);
+
+        // the expanding clear-out ring during the death burst
+        if let BossState::DeathBurst(burst) = self.state {
+            draw_circle_lines(
+                self.position.x,
+                self.position.y,
+                burst.radius,
+                BOSS_DEATH_BURST_THICKNESS,
+                BOSS_DEATH_BURST_COLOR,
+            );
+        }
     }
 }
