@@ -4,7 +4,7 @@ use crate::constants::{BACKGROUND, HEIGHT, WIDTH};
 use crate::gfx::Shaders;
 
 const RENDER_SCALE: f32 = 2.0;
-const POST_FLIP_Y: bool = false;
+const POST_FLIP_Y: bool = true;
 
 pub struct Post {
     target: RenderTarget,
