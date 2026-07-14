@@ -70,8 +70,6 @@ pub const BOSS_PROJECTILE_COUNT: usize = 15;
 pub const BOSS_AIM_STEP: f32 = 0.12;
 pub const BOSS_AIM_STEPS: i32 = 3;
 
-// thresholds for the boss to trigger a difficult state
-pub const BOSS_SPECIAL_HP_THRESHOLDS: [f32; 3] = [0.8, 0.5, 0.3];
 // seconds between volleys in the clustered special move
 pub const BOSS_SPECIAL_FIRE_INTERVAL: f32 = 0.4;
 pub const BOSS_SPECIAL_SPINUP_HOLD: f32 = 2.0;

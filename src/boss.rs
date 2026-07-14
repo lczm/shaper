@@ -4,16 +4,17 @@ use crate::constants::{
     BACKGROUND, BEAM_EDGE_OVERSHOOT, BOSS_AIM_STEP, BOSS_AIM_STEPS, BOSS_BEAM_INTERVAL,
     BOSS_CLUSTER_COUNT, BOSS_CLUSTER_INTRA_GAP, BOSS_CLUSTER_SHOTS, BOSS_COLOR, BOSS_FIRE_INTERVAL,
     BOSS_HEIGHT, BOSS_IDLE_ROTATION_SPEED, BOSS_PROJECTILE_COLOR, BOSS_PROJECTILE_COUNT,
-    BOSS_SPECIAL_DURATION, BOSS_SPECIAL_FIRE_INTERVAL, BOSS_SPECIAL_HP_THRESHOLDS,
-    BOSS_SPECIAL_PROJECTILE_COLOR, BOSS_SPECIAL_PROJECTILE_SPEED, BOSS_SPECIAL_SPINUP_HOLD,
-    BOSS_SPECIAL_SWEEP_STEP, BOSS_SPINUP_DURATION, BOSS_SPINUP_HOLD, BOSS_SPINUP_PEAK_SPEED,
-    BOSS_SPINUP_RAMP_DOWN, BOSS_SPINUP_RAMP_UP, BOSS_WIDTH, HEALTH_BAR_DROP_SPEED,
-    PROJECTILE_SPEED,
+    BOSS_SPECIAL_DURATION, BOSS_SPECIAL_FIRE_INTERVAL, BOSS_SPECIAL_PROJECTILE_COLOR,
+    BOSS_SPECIAL_PROJECTILE_SPEED, BOSS_SPECIAL_SPINUP_HOLD, BOSS_SPECIAL_SWEEP_STEP,
+    BOSS_SPINUP_DURATION, BOSS_SPINUP_HOLD, BOSS_SPINUP_PEAK_SPEED, BOSS_SPINUP_RAMP_DOWN,
+    BOSS_SPINUP_RAMP_UP, BOSS_WIDTH, HEALTH_BAR_DROP_SPEED, PROJECTILE_SPEED,
 };
 use crate::projectile::{BeamProjectile, BulletProjectile, Projectile, ProjectileKind};
 use crate::shape::Rectangle;
 use crate::state::GameState;
 use crate::utils::smoothstep;
+
+const BOSS_SPECIAL_HP_THRESHOLDS: [f32; 3] = [0.8, 0.5, 0.3];
 
 // spin up animation, spin spin spin
 #[derive(Clone, Copy)]
@@ -117,13 +118,14 @@ impl Boss {
         self.update_displayed_health(dt);
 
         // transition when its time to switch to a more difficult state
-        if matches!(self.state, BossState::Idle(_))
-            && self.special_moves_fired < BOSS_SPECIAL_HP_THRESHOLDS.len()
-            && (self.current_health as f32)
-                <= BOSS_SPECIAL_HP_THRESHOLDS[self.special_moves_fired] * self.total_health as f32
-        {
-            self.special_moves_fired += 1;
-            self.state = BossState::SpecialMove(SpecialMoveState::new());
+        if matches!(self.state, BossState::Idle(_)) {
+            let health_frac = self.current_health as f32 / self.total_health as f32;
+            if let Some(&threshold) = BOSS_SPECIAL_HP_THRESHOLDS.get(self.special_moves_fired) {
+                if health_frac <= threshold {
+                    self.special_moves_fired += 1;
+                    self.state = BossState::SpecialMove(SpecialMoveState::new());
+                }
+            }
         }
 
         match self.state {
