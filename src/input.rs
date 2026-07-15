@@ -11,12 +11,14 @@ pub struct Input {
     pub shift_pressed: bool,
     pub z_pressed: bool,
     pub tilde_pressed: bool,
+    pub tab_pressed: bool,
     pub space_pressed: bool,
     pub escape_pressed: bool,
     pub f1_pressed: bool,
 
     // mouse and left click
     pub mouse: Vec2,
+    pub screen_mouse: Vec2,
     pub primary_pressed: bool,
 }
 
@@ -32,10 +34,12 @@ impl Input {
                 || is_key_pressed(KeyCode::RightShift),
             z_pressed: is_key_pressed(KeyCode::Z),
             tilde_pressed: is_key_pressed(KeyCode::GraveAccent),
+            tab_pressed: is_key_pressed(KeyCode::Tab),
             space_pressed: is_key_pressed(KeyCode::Space),
             escape_pressed: is_key_pressed(KeyCode::Escape),
             f1_pressed: is_key_pressed(KeyCode::F1),
             mouse: camera.screen_to_world(mouse_position().into()),
+            screen_mouse: mouse_position().into(),
             primary_pressed: is_mouse_button_pressed(MouseButton::Left),
         }
     }

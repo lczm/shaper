@@ -6,6 +6,7 @@ mod constants;
 mod dev_ui;
 mod gfx;
 mod input;
+mod level_window;
 mod player;
 mod projectile;
 mod shape;

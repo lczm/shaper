@@ -119,3 +119,7 @@ pub fn handle_collisions(
         });
     }
 }
+
+pub fn point_in_rect(p: Vec2, r: Rect) -> bool {
+    p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h
+}

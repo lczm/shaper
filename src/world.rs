@@ -1,6 +1,7 @@
 use macroquad::prelude::*;
 
 use crate::arena::Arena;
+use crate::boss::BOSS_SPECIAL_HP_THRESHOLDS;
 use crate::constants::{
     BACKGROUND, GAME_OVER_BANNER_DURATION, HEIGHT, LOST_BANNER_DURATION, MAX_FRAME_DT,
     RESET_BANNER_DURATION, SHAKE_TRAUMA_PER_HIT, WIDTH,
@@ -8,6 +9,7 @@ use crate::constants::{
 use crate::dev_ui;
 use crate::gfx::{Post, Shaders, Shake};
 use crate::input::Input;
+use crate::level_window::{LevelUpOption, LevelWindow, generate_placeholder_options};
 use crate::state::GameState;
 use crate::ui::Ui;
 
@@ -26,6 +28,10 @@ pub enum GameEvent {
 
     // pushed when the boss finishes its death animation
     GameOver,
+
+    // boss HP threshold crossed or tab pressed; carries the three upgrade
+    // options to present. the world spawns a LevelWindow from this event
+    LevelUp { options: [LevelUpOption; 3] },
 }
 
 // whether the simulation is advancing or frozen
@@ -62,6 +68,12 @@ pub struct World {
     dev_ui: bool,
     // paused freezes the simulation; rendering keeps going
     world_state: WorldState,
+    // modal upgrade window, if one is currently being shown. created on-demand
+    // from a GameEvent::LevelUp; absent otherwise
+    level_window: Option<LevelWindow>,
+    // which boss HP-fraction thresholds have already triggered a level-up this
+    // fight, so each one only fires once. cleared on game reset
+    level_thresholds_opened: Vec<bool>,
 
     // drained every frame
     events: Vec<GameEvent>,
@@ -89,6 +101,9 @@ impl World {
             game_over_banner: 0.0,
             dev_ui: false,
             world_state: WorldState::Running,
+            level_window: None,
+            // to track that the level up window is only shown once per threshold
+            level_thresholds_opened: vec![false; BOSS_SPECIAL_HP_THRESHOLDS.len()],
             events: Vec::new(),
         }
     }
@@ -119,6 +134,31 @@ impl World {
 
         // gather input here since World owns the camera (mouse -> world)
         let input = Input::gather(&self.camera);
+
+        // hotkey to force a level-up window for testing
+        if input.tab_pressed && self.level_window.is_none() {
+            self.events.push(GameEvent::LevelUp {
+                options: generate_placeholder_options(),
+            });
+        }
+
+        // drain and process any pending events. a GameEvent::LevelUp gets
+        // turned into a real LevelWindow here
+        self.process_events();
+
+        // after processing events, if there exists a window
+        // then we move all control to the window and keep the game frozen
+        // until it returns something
+        // it returns Some if a card is picked
+        if let Some(window) = self.level_window.as_mut() {
+            if window
+                .update(self.dt, input.screen_mouse, input.primary_pressed)
+                .is_some()
+            {
+                self.level_window = None;
+            }
+            return;
+        }
 
         if input.escape_pressed {
             self.world_state = match self.world_state {
@@ -152,6 +192,8 @@ impl World {
             // reset the entire game state
             self.arena = Arena::new();
             self.state = GameState::new();
+            // clear the level-up window and threshold tracking for the new fight
+            self.reset_level_state();
 
             self.events.push(GameEvent::GameReset);
         }
@@ -159,24 +201,34 @@ impl World {
         self.arena
             .update(self.dt, &input, &mut self.state, &mut self.events);
 
-        // the game itself might emit some game events,
-        // like player hit, react to them here
-        for event in self.events.drain(..) {
-            match event {
-                GameEvent::PlayerHit => {
-                    self.state.lives = self.state.lives.saturating_sub(1);
-                    self.arena.player_mut().register_hit();
-                    self.shake.add_trauma(SHAKE_TRAUMA_PER_HIT);
+        // process any leftover state
+        self.process_events();
 
-                    if self.state.lives == 0 {
-                        // reset the entire game state
-                        self.arena = Arena::new();
-                        self.state = GameState::new();
-                        // world is fresh now; drop any remaining stale events
-                        self.lost_banner = LOST_BANNER_DURATION;
+        // this checks and pushes the events for the level up window
+        // it gets opened in the next frame
+        if self.level_window.is_none() {
+            let (boss_current, boss_total) = self.arena.boss_health();
+            if boss_current > 0 && boss_total > 0 {
+                let frac = boss_current as f32 / boss_total as f32;
+                for (i, &t) in BOSS_SPECIAL_HP_THRESHOLDS.iter().enumerate() {
+                    if !self.level_thresholds_opened[i] && frac <= t {
+                        self.level_thresholds_opened[i] = true;
+                        self.events.push(GameEvent::LevelUp {
+                            options: generate_placeholder_options(),
+                        });
+                        // only one threshold can fire per frame
                         break;
                     }
                 }
+            }
+        }
+    }
+
+    fn process_events(&mut self) {
+        let events: Vec<GameEvent> = self.events.drain(..).collect();
+        for event in events {
+            match event {
+                GameEvent::PlayerHit => self.handle_player_hit(),
                 GameEvent::BossHit { damage } => {
                     self.arena.damage_boss(damage);
                 }
@@ -190,7 +242,31 @@ impl World {
                 GameEvent::GameOver => {
                     self.game_over_banner = GAME_OVER_BANNER_DURATION;
                 }
+                GameEvent::LevelUp { options } => {
+                    self.level_window = Some(LevelWindow::new(options));
+                }
             }
+        }
+    }
+
+    fn handle_player_hit(&mut self) {
+        self.state.lives = self.state.lives.saturating_sub(1);
+        self.arena.player_mut().register_hit();
+        self.shake.add_trauma(SHAKE_TRAUMA_PER_HIT);
+        // reset game when health is 0
+        if self.state.lives == 0 {
+            self.arena = Arena::new();
+            self.state = GameState::new();
+            self.reset_level_state();
+            self.lost_banner = LOST_BANNER_DURATION;
+        }
+    }
+
+    // drop any leftover level threshold states from the previous fight
+    fn reset_level_state(&mut self) {
+        self.level_window = None;
+        for f in self.level_thresholds_opened.iter_mut() {
+            *f = false;
         }
     }
 
@@ -227,6 +303,13 @@ impl World {
             self.game_over_banner,
             self.world_state == WorldState::Paused,
         );
+
+        // level-up window draws last so it covers the arena, the hud, and the
+        // dev ui. it also resets to the default camera in case egui left its
+        // own pipeline active
+        if let Some(window) = &self.level_window {
+            window.draw();
+        }
 
         // always render dev ui on top of everything else
         if self.dev_ui {
