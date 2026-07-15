@@ -1,9 +1,11 @@
 use macroquad::prelude::*;
 
+use crate::boss::BOSS_SPECIAL_HP_THRESHOLDS;
 use crate::constants::{
     ARENA_BORDER_COLOR, BANNER_FONT_SIZE, HEALTH_BAR_BG_COLOR, HEALTH_BAR_CHIP_COLOR,
-    HEALTH_BAR_FILL_COLOR, HEALTH_BAR_HEIGHT, HEALTH_BAR_TOP_MARGIN, HEIGHT, PLAYER_FIRE_INTERVAL,
-    UI_TEXT_COLOR, WIDTH,
+    HEALTH_BAR_FILL_COLOR, HEALTH_BAR_HEIGHT, HEALTH_BAR_INVULN_FILL_COLOR,
+    HEALTH_BAR_MARKER_COLOR, HEALTH_BAR_MARKER_THICKNESS, HEALTH_BAR_TOP_MARGIN, HEIGHT,
+    PLAYER_FIRE_INTERVAL, UI_TEXT_COLOR, WIDTH,
 };
 use crate::state::GameState;
 
@@ -22,6 +24,7 @@ impl Ui {
         player_damage: i32,
         boss_health: (i32, i32),
         boss_displayed: f32,
+        boss_invulnerable: bool,
         reset_banner: f32,
         lost_banner: f32,
         game_over_banner: f32,
@@ -34,7 +37,15 @@ impl Ui {
         set_default_camera();
 
         // boss health bar across the top, aligned over the arena
-        self.draw_boss_health(bounds, boss_health.0, boss_health.1, boss_displayed, sx, sy);
+        self.draw_boss_health(
+            bounds,
+            boss_health.0,
+            boss_health.1,
+            boss_displayed,
+            boss_invulnerable,
+            sx,
+            sy,
+        );
 
         let x = bounds.right() * sx + 40.0 * sx;
         let mut y = bounds.y * sy + 40.0 * sy;
@@ -105,12 +116,14 @@ impl Ui {
         );
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn draw_boss_health(
         &self,
         bounds: Rect,
         current: i32,
         total: i32,
         displayed: f32,
+        invulnerable: bool,
         sx: f32,
         sy: f32,
     ) {
@@ -129,6 +142,12 @@ impl Ui {
         };
         let cur_frac = frac(current as f32);
         let chip_frac = frac(displayed).max(cur_frac);
+        // swap to the invulnerable tint while the boss can't be damaged
+        let boss_fill_color = if invulnerable {
+            HEALTH_BAR_INVULN_FILL_COLOR
+        } else {
+            HEALTH_BAR_FILL_COLOR
+        };
 
         // empty track underneath
         draw_rectangle(x, y, w, h, HEALTH_BAR_BG_COLOR);
@@ -145,8 +164,21 @@ impl Ui {
             );
         }
 
-        // red fill, width scaled by the remaining health fraction
-        draw_rectangle(x, y, w * cur_frac, h, HEALTH_BAR_FILL_COLOR);
+        // health fill, width scaled by the remaining health fraction
+        draw_rectangle(x, y, w * cur_frac, h, boss_fill_color);
+
+        // thin vertical strips at each special-move threshold, so the player can see the
+        // upcoming invulnerability windows on the bar
+        let marker_w = HEALTH_BAR_MARKER_THICKNESS * sx;
+        for &threshold in BOSS_SPECIAL_HP_THRESHOLDS.iter() {
+            draw_rectangle(
+                x + w * threshold - marker_w / 2.0,
+                y,
+                marker_w,
+                h,
+                HEALTH_BAR_MARKER_COLOR,
+            );
+        }
 
         // outline on top of the fill
         draw_rectangle_lines(x, y, w, h, 2.0 * sx, ARENA_BORDER_COLOR);

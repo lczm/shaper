@@ -22,7 +22,6 @@ pub const PLAYER_TRAIL_COLOR: Color = Color::new(0.45, 0.85, 0.85, 1.0); // dim 
 // boss colors
 pub const BOSS_COLOR: Color = Color::new(0.96, 0.28, 0.55, 1.0); // hot magenta-pink
 pub const BOSS_PROJECTILE_COLOR: Color = Color::new(1.0, 0.45, 0.30, 1.0); // warm coral
-// special-move bullets are a darker coral so they read as a different attack
 pub const BOSS_SPECIAL_PROJECTILE_COLOR: Color = Color::new(0.58, 0.24, 0.16, 1.0); // burnt coral
 
 // hud colors
@@ -154,6 +153,11 @@ pub const HEALTH_BAR_TOP_MARGIN: f32 = 8.0;
 pub const HEALTH_BAR_BG_COLOR: Color = Color::new(0.15, 0.16, 0.22, 0.9);
 // current health colour
 pub const HEALTH_BAR_FILL_COLOR: Color = Color::new(0.90, 0.20, 0.25, 1.0);
+// current health colour when the boss is invulnerable (special move / dying / dead)
+pub const HEALTH_BAR_INVULN_FILL_COLOR: Color = Color::new(0.30, 0.55, 0.95, 1.0);
+// thin vertical strip drawn over the bar at each boss special-move threshold
+pub const HEALTH_BAR_MARKER_COLOR: Color = Color::new(0.95, 0.96, 1.0, 1.0);
+pub const HEALTH_BAR_MARKER_THICKNESS: f32 = 2.0;
 // animated chip colour
 pub const HEALTH_BAR_CHIP_COLOR: Color = Color::new(0.98, 0.90, 0.65, 1.0);
 pub const HEALTH_BAR_DROP_SPEED: f32 = 9.0;

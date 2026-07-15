@@ -221,6 +221,7 @@ impl World {
             self.arena.player_damage(),
             self.arena.boss_health(),
             self.arena.boss_displayed_health(),
+            self.arena.boss_invulnerable(),
             self.reset_banner,
             self.lost_banner,
             self.game_over_banner,

@@ -19,7 +19,7 @@ use crate::state::GameState;
 use crate::utils::smoothstep;
 use crate::world::GameEvent;
 
-const BOSS_SPECIAL_HP_THRESHOLDS: [f32; 3] = [0.8, 0.5, 0.3];
+pub const BOSS_SPECIAL_HP_THRESHOLDS: [f32; 3] = [0.75, 0.5, 0.25];
 
 // spin up animation, spin spin spin
 #[derive(Clone, Copy)]
@@ -199,7 +199,7 @@ impl Boss {
     }
 
     // spin up animation
-    fn update_init(&mut self, dt: f32, mut init: InitState, state: &mut GameState) {
+    fn update_init(&mut self, dt: f32, mut init: InitState, _state: &mut GameState) {
         init.elapsed += dt;
         self.rotation += Self::spinup_speed(init.elapsed, BOSS_SPINUP_HOLD) * dt;
 

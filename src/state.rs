@@ -1,4 +1,3 @@
-use macroquad::prelude::Vec2;
 
 use crate::constants::{STARTING_BOMBS, STARTING_LIVES};
 use crate::projectile::Projectile;

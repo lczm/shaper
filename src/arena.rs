@@ -58,6 +58,11 @@ impl Arena {
         self.boss.displayed_health()
     }
 
+    // used by hud to show the invulnerable fill colour on health bar
+    pub fn boss_invulnerable(&self) -> bool {
+        self.boss.is_invulnerable()
+    }
+
     pub fn player_damage(&self) -> i32 {
         self.player.damage()
     }
