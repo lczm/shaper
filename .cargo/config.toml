@@ -1,0 +1,5 @@
+# Allow undefined symbols when linking for wasm32-unknown-unknown.
+# Macroquad's JS/WebGL glue functions (init_webgl, glBindTexture, console_log, etc.)
+# are provided at runtime by mq_js_bundle.js, so the linker must not error on them.
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "link-args=--allow-undefined"]
