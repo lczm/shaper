@@ -2,7 +2,7 @@ use macroquad::prelude::*;
 
 use crate::boss::Boss;
 use crate::constants::{BEAM_WIDTH, PROJECTILE_RADIUS};
-use crate::modifiers::ModifierContext;
+use crate::modifiers::{ModifierContext, SecondaryHitKind};
 use crate::player::Player;
 use crate::projectile::{Projectile, ProjectileKind};
 use crate::state::GameState;
@@ -104,17 +104,32 @@ pub fn handle_collisions(
                         player_position: player_pos,
                     };
 
+                    let mut secondary_hits = Vec::new();
                     for modifier in &modifiers {
-                        let result = modifier.on_hit(b, &mut modifier_state, &ctx);
+                        let mut result = modifier.on_hit(b, &mut modifier_state, &ctx);
                         if !result.destroy {
                             should_destroy = false;
                         }
                         bonus += result.extra_damage;
+                        secondary_hits.append(&mut result.secondary_hits);
                     }
                     b.modifiers = modifiers;
                     b.modifier_state = modifier_state;
 
                     boss_damage += damage + bonus;
+
+                    for hit in secondary_hits {
+                        boss_damage += hit.damage;
+                        let visual_effect = match hit.kind {
+                            SecondaryHitKind::Lightning => {
+                                crate::world::VisualEffect::Lightning {
+                                    start: b.position,
+                                    end: hit.position,
+                                }
+                            }
+                        };
+                        events.push(GameEvent::TriggerVisualEffect(visual_effect));
+                    }
 
                     // keep the bullet if any modifier said don't destroy
                     !should_destroy

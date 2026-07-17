@@ -184,5 +184,15 @@ pub const GAME_OVER_BANNER_DURATION: f32 = 0.75;
 
 // modifiers
 pub const HOMING_TURN_SPEED: f32 = 4.0;
+pub const LIGHTNING_DAMAGE_MULTIPLIER: f32 = 0.3;
+pub const LIGHTNING_EFFECT_DURATION: f32 = 0.12; // Duration of chain lightning visual arc in seconds
 // homing turns the projectiles purple
 pub const HOMING_PROJECTILE_COLOR: Color = Color::new(0.45, 0.15, 0.70, 1.0);
+// green ish colour
+pub const BOUNCING_PROJECTILE_COLOR: Color = Color::new(0.20, 0.85, 0.30, 1.0);
+// yellow ish color
+pub const LIGHTNING_PROJECTILE_COLOR: Color = Color::new(1.0, 0.9, 0.2, 1.0);
+// blue ish color
+pub const LIGHTNING_BLOOM_COLOR: Color = Color::new(0.4, 0.7, 1.0, 1.0);
+// bright white blue core
+pub const LIGHTNING_CORE_COLOR: Color = Color::new(0.9, 0.95, 1.0, 1.0);

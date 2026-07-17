@@ -1,11 +1,35 @@
 mod beam;
+mod lightning;
 mod post;
 mod shake;
 
 use macroquad::miniquad::{BlendFactor, BlendState, BlendValue, Equation};
 use macroquad::prelude::*;
 
+pub use lightning::LightningEffect;
 pub use post::Post;
+
+#[derive(Clone)]
+pub enum ActiveVisualEffect {
+    Lightning(LightningEffect),
+}
+
+impl ActiveVisualEffect {
+    pub fn update(&mut self, dt: f32) -> bool {
+        match self {
+            ActiveVisualEffect::Lightning(e) => {
+                e.elapsed += dt;
+                e.elapsed < e.max_duration
+            }
+        }
+    }
+
+    pub fn draw(&self) {
+        match self {
+            ActiveVisualEffect::Lightning(e) => e.draw(),
+        }
+    }
+}
 pub use shake::Shake;
 
 // default vertex shader

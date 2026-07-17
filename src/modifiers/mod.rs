@@ -1,8 +1,11 @@
 use macroquad::prelude::*;
 
 use crate::{
-    constants::{ARENA_BORDER_THICKNESS, HOMING_PROJECTILE_COLOR, HOMING_TURN_SPEED},
-    projectile::BulletProjectile,
+    constants::{
+        ARENA_BORDER_THICKNESS, BOUNCING_PROJECTILE_COLOR, HOMING_PROJECTILE_COLOR,
+        HOMING_TURN_SPEED, LIGHTNING_DAMAGE_MULTIPLIER, LIGHTNING_PROJECTILE_COLOR,
+    },
+    projectile::{BulletProjectile, ProjectileKind},
 };
 
 // some context for the projectile modifiers to query the state
@@ -14,6 +17,18 @@ pub struct ModifierContext {
     pub player_position: Vec2,
 }
 
+#[derive(Clone, Copy)]
+pub enum SecondaryHitKind {
+    Lightning,
+}
+
+#[derive(Clone, Copy)]
+pub struct SecondaryHit {
+    pub position: Vec2,
+    pub damage: i32,
+    pub kind: SecondaryHitKind,
+}
+
 // what happens after a player projectile hits the boss
 // if there are multiple modifiers on the same projectile and
 // they are conflicting, then they get merged
@@ -22,6 +37,7 @@ pub struct HitResult {
     pub destroy: bool,
     // sum up extra damage from all modifiers that apply extra damage
     pub extra_damage: i32,
+    pub secondary_hits: Vec<SecondaryHit>,
 }
 
 impl Default for HitResult {
@@ -29,6 +45,7 @@ impl Default for HitResult {
         Self {
             destroy: true,
             extra_damage: 0,
+            secondary_hits: Vec::new(),
         }
     }
 }
@@ -62,6 +79,8 @@ pub enum Modifier {
     Homing,
     // bounces off the arena borders
     Bouncing,
+    // chain lightning on hit
+    Lightning,
 }
 
 impl Modifier {
@@ -78,6 +97,10 @@ impl Modifier {
             // bounce once is fine
             Modifier::Bouncing => {
                 state.bounce_count = 1;
+                projectile.circle.color = BOUNCING_PROJECTILE_COLOR;
+            }
+            Modifier::Lightning => {
+                projectile.circle.color = LIGHTNING_PROJECTILE_COLOR;
             }
         }
     }
@@ -168,6 +191,7 @@ impl Modifier {
                     }
                 }
             }
+            Modifier::Lightning => {}
         }
     }
 
@@ -181,6 +205,56 @@ impl Modifier {
             Modifier::None => HitResult::default(),
             Modifier::Homing => HitResult::default(),
             Modifier::Bouncing => HitResult::default(),
+            Modifier::Lightning => {
+                let damage = match projectile.kind {
+                    ProjectileKind::Player { damage } => damage,
+                    _ => 0,
+                };
+                let lightning_damage =
+                    ((damage as f32) * LIGHTNING_DAMAGE_MULTIPLIER).max(1.0) as i32;
+
+                let mut secondary_hits = Vec::new();
+                if let Some(&primary_target) = ctx.enemy_positions.first() {
+                    if ctx.enemy_positions.len() > 1 {
+                        for &pos in ctx.enemy_positions.iter().take(3) {
+                            if secondary_hits.len() < 2 {
+                                secondary_hits.push(SecondaryHit {
+                                    position: pos,
+                                    damage: lightning_damage,
+                                    kind: SecondaryHitKind::Lightning,
+                                });
+                            }
+                        }
+                    } else {
+                        // if theres only 1 enemy, then hit it twice
+                        // with slightly random effect positions so it looks clean
+                        let offset1 = vec2(
+                            macroquad::rand::gen_range(-40.0, -15.0),
+                            macroquad::rand::gen_range(-20.0, 20.0),
+                        );
+                        let offset2 = vec2(
+                            macroquad::rand::gen_range(15.0, 40.0),
+                            macroquad::rand::gen_range(-20.0, 20.0),
+                        );
+                        secondary_hits.push(SecondaryHit {
+                            position: primary_target + offset1,
+                            damage: lightning_damage,
+                            kind: SecondaryHitKind::Lightning,
+                        });
+                        secondary_hits.push(SecondaryHit {
+                            position: primary_target + offset2,
+                            damage: lightning_damage,
+                            kind: SecondaryHitKind::Lightning,
+                        });
+                    }
+                }
+
+                HitResult {
+                    destroy: true,
+                    extra_damage: 0,
+                    secondary_hits,
+                }
+            }
         }
     }
 
@@ -189,6 +263,7 @@ impl Modifier {
             Modifier::None => "Placeholder",
             Modifier::Homing => "Homing",
             Modifier::Bouncing => "Bouncing",
+            Modifier::Lightning => "Jacob's Ladder",
         }
     }
 
@@ -198,6 +273,9 @@ impl Modifier {
             Modifier::Homing => "Projectiles steer toward the nearest enemy.",
             Modifier::Bouncing => {
                 "Projectiles can bounce once off the arena bounds. When it bounces, it is a little random!"
+            }
+            Modifier::Lightning => {
+                "Projectiles release chain lightning on hit, dealing 30% damage to up to 2 nearby targets."
             }
         }
     }

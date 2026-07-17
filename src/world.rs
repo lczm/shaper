@@ -3,8 +3,8 @@ use macroquad::prelude::*;
 use crate::arena::Arena;
 use crate::boss::BOSS_SPECIAL_HP_THRESHOLDS;
 use crate::constants::{
-    BACKGROUND, GAME_OVER_BANNER_DURATION, HEIGHT, LOST_BANNER_DURATION, MAX_FRAME_DT,
-    RESET_BANNER_DURATION, SHAKE_TRAUMA_PER_HIT, WIDTH,
+    BACKGROUND, GAME_OVER_BANNER_DURATION, HEIGHT, LIGHTNING_EFFECT_DURATION, LOST_BANNER_DURATION,
+    MAX_FRAME_DT, RESET_BANNER_DURATION, SHAKE_TRAUMA_PER_HIT, WIDTH,
 };
 use crate::dev_ui;
 use crate::gfx::{Post, Shaders, Shake};
@@ -12,6 +12,11 @@ use crate::input::Input;
 use crate::level_window::{LevelUpOption, LevelWindow, generate_placeholder_options};
 use crate::state::GameState;
 use crate::ui::Ui;
+
+#[derive(Clone, Copy)]
+pub enum VisualEffect {
+    Lightning { start: Vec2, end: Vec2 },
+}
 
 // things that the game events can emit
 // like the player getting hit
@@ -32,6 +37,9 @@ pub enum GameEvent {
     // boss HP threshold crossed or tab pressed; carries the three upgrade
     // options to present. the world spawns a LevelWindow from this event
     LevelUp { options: [LevelUpOption; 3] },
+
+    // trigger a transient visual effect
+    TriggerVisualEffect(VisualEffect),
 }
 
 // whether the simulation is advancing or frozen
@@ -231,6 +239,21 @@ impl World {
                 GameEvent::LevelUp { options } => {
                     self.level_window = Some(LevelWindow::new(options));
                 }
+                // all visual effects go through here, then it pushes some activevisual effect to the arena
+                GameEvent::TriggerVisualEffect(effect) => match effect {
+                    VisualEffect::Lightning { start, end } => {
+                        self.state
+                            .visual_effects
+                            .push(crate::gfx::ActiveVisualEffect::Lightning(
+                                crate::gfx::LightningEffect {
+                                    start,
+                                    end,
+                                    elapsed: 0.0,
+                                    max_duration: LIGHTNING_EFFECT_DURATION,
+                                },
+                            ));
+                    }
+                },
             }
         }
         self.events = events;

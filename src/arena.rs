@@ -126,6 +126,9 @@ impl Arena {
         let bounds = self.bounds;
         state.projectiles.retain(|p| !p.is_dead(bounds));
 
+        // update visual effects and retain those that haven't expired
+        state.visual_effects.retain_mut(|effect| effect.update(dt));
+
         // clears all hazards in the bomb radius
         if let Some(bomb) = &mut self.bomb {
             state.projectiles.retain(|p| !bomb.clears(p));
@@ -150,6 +153,11 @@ impl Arena {
 
         self.player.draw();
         self.boss.draw();
+
+        // draw active visual effects on top of the boss
+        for effect in &state.visual_effects {
+            effect.draw();
+        }
 
         // bomb ring on top of the scene while it's active
         if let Some(bomb) = &self.bomb {
