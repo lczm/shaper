@@ -1,28 +1,33 @@
 use macroquad::prelude::*;
 
 use crate::collision::point_in_rect;
+use crate::modifiers::Modifier;
 use crate::utils::wrap_text;
 
+// level up card, it holds a modifier that gets added
+// to the players projectile modifier list when selected
 #[derive(Clone)]
 pub struct LevelUpOption {
     pub name: String,
     pub description: String,
+    pub modifier: Modifier,
 }
 
 impl LevelUpOption {
-    pub fn new(name: &str, description: &str) -> Self {
+    pub fn new(modifier: Modifier) -> Self {
         LevelUpOption {
-            name: name.to_string(),
-            description: description.to_string(),
+            name: modifier.name().to_string(),
+            description: modifier.description().to_string(),
+            modifier,
         }
     }
 }
 
 pub fn generate_placeholder_options() -> [LevelUpOption; 3] {
     [
-        LevelUpOption::new("Placeholder A", "First placeholder option."),
-        LevelUpOption::new("Placeholder B", "Second placeholder option."),
-        LevelUpOption::new("Placeholder C", "Third placeholder option."),
+        LevelUpOption::new(Modifier::Homing),
+        LevelUpOption::new(Modifier::None),
+        LevelUpOption::new(Modifier::None),
     ]
 }
 
@@ -61,6 +66,10 @@ impl LevelWindow {
         }
 
         None
+    }
+
+    pub fn selected_modifier(&self, index: usize) -> Modifier {
+        self.options[index].modifier.clone()
     }
 
     // draw the window over the rest of the scene. assumes the default (screen-space)
@@ -114,18 +123,6 @@ impl LevelWindow {
         for (i, r) in rects.iter().enumerate() {
             self.draw_card(i, *r);
         }
-
-        // bottom hint
-        let hint = "Press 1, 2, 3 or click to choose";
-        let hint_size = 18.0;
-        let hint_dims = measure_text(hint, None, hint_size as u16, 1.0);
-        draw_text(
-            hint,
-            win_x + (win_w - hint_dims.width) / 2.0,
-            win_y + win_h - 20.0,
-            hint_size,
-            Color::new(0.65, 0.65, 0.68, 1.0),
-        );
     }
 
     fn draw_card(&self, index: usize, rect: Rect) {

@@ -180,3 +180,6 @@ pub const RESET_BANNER_DURATION: f32 = 0.75;
 pub const LOST_BANNER_DURATION: f32 = 0.75;
 // shown once the boss finishes its death animation
 pub const GAME_OVER_BANNER_DURATION: f32 = 0.75;
+
+// modifiers
+pub const HOMING_TURN_SPEED: f32 = 4.0;

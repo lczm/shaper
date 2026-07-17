@@ -8,6 +8,7 @@ use crate::constants::{
 };
 use crate::input::Input;
 use crate::projectile::{BulletProjectile, Projectile, ProjectileKind};
+use crate::recipe::ProjectileRecipe;
 use crate::shape::Circle;
 use crate::state::GameState;
 use crate::world::GameEvent;
@@ -32,6 +33,8 @@ pub struct Player {
     // post-hit invulnerability window; counts down to 0
     hit_cooldown: f32,
     damage: i32,
+    // apply modifiers on each bullet when projectile is spawned
+    pub projectile_recipe: ProjectileRecipe,
 }
 
 impl Player {
@@ -45,6 +48,7 @@ impl Player {
             fire_interval: PLAYER_FIRE_INTERVAL,
             hit_cooldown: 0.0,
             damage: 5,
+            projectile_recipe: ProjectileRecipe::new(),
         }
     }
 
@@ -127,6 +131,8 @@ impl Player {
             .y
             .clamp(bounds.y + inset, bounds.y + bounds.h - inset);
 
+        // continuously fire
+        // this is the start point of all the projectiles that the player fires
         self.fire(dt, state);
     }
 
@@ -137,16 +143,20 @@ impl Player {
             // keep the overshoot remainder so cadence doesnt drift
             self.fire_timer += self.fire_interval;
             // continuously spawn new bullet projectile from the player position upwards
-            state
-                .projectiles
-                .push(Projectile::Bullet(BulletProjectile::new(
-                    self.position,
-                    vec2(0.0, -PLAYER_PROJECTILE_SPEED),
-                    ProjectileKind::Player {
-                        damage: self.damage,
-                    },
-                    PLAYER_PROJECTILE_COLOR,
-                )));
+            let mut bullet = BulletProjectile::new(
+                self.position,
+                vec2(0.0, -PLAYER_PROJECTILE_SPEED),
+                ProjectileKind::Player {
+                    damage: self.damage,
+                },
+                PLAYER_PROJECTILE_COLOR,
+            );
+
+            // apply all accumulated modifiers from the recipe
+            let (modifiers, modifier_state) = self.projectile_recipe.apply(&mut bullet);
+            bullet.modifiers = modifiers;
+            bullet.modifier_state = modifier_state;
+            state.projectiles.push(Projectile::Bullet(bullet));
         }
     }
 

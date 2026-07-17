@@ -5,6 +5,7 @@ use crate::constants::{
     BEAM_STARTUP_DURATION, BEAM_WIDTH, PROJECTILE_RADIUS,
 };
 use crate::gfx::Shaders;
+use crate::modifiers::{Modifier, ModifierContext, ModifierState};
 use crate::shape::Circle;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -16,9 +17,14 @@ pub enum ProjectileKind {
 // a moving circular bullet (the original projectile)
 pub struct BulletProjectile {
     pub position: Vec2,
-    velocity: Vec2,
+    pub velocity: Vec2,
     circle: Circle,
     pub kind: ProjectileKind,
+
+    // projectile has a list of modifiers that are applied to it
+    // and each of the modifiers are composable
+    pub modifiers: Vec<Modifier>,
+    pub modifier_state: ModifierState,
 }
 
 impl BulletProjectile {
@@ -30,11 +36,24 @@ impl BulletProjectile {
             velocity,
             circle,
             kind,
+            modifiers: vec![],
+            modifier_state: ModifierState::default(),
         }
     }
 
-    pub fn update(&mut self, dt: f32) {
+    pub fn update(&mut self, dt: f32, ctx: Option<&ModifierContext>) {
         self.position += self.velocity * dt;
+
+        // run modifier on_update hooks (player bullets only)
+        if let Some(ctx) = ctx {
+            let modifiers = std::mem::take(&mut self.modifiers);
+            let mut state = std::mem::take(&mut self.modifier_state);
+            for modifier in &modifiers {
+                modifier.on_update(self, &mut state, dt, ctx);
+            }
+            self.modifiers = modifiers;
+            self.modifier_state = state;
+        }
     }
 
     // true once the bullet's edge reaches the inner edge of the border, so it's
@@ -116,9 +135,9 @@ pub enum Projectile {
 }
 
 impl Projectile {
-    pub fn update(&mut self, dt: f32) {
+    pub fn update(&mut self, dt: f32, ctx: Option<&ModifierContext>) {
         match self {
-            Projectile::Bullet(b) => b.update(dt),
+            Projectile::Bullet(b) => b.update(dt, ctx),
             Projectile::Beam(beam) => beam.update(dt),
         }
     }

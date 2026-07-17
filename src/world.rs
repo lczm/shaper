@@ -138,10 +138,10 @@ impl World {
         // if a level-up window is active, it gets exclusive control;
         // the game stays frozen until the player picks a card
         if let Some(window) = self.level_window.as_mut() {
-            if window
-                .update(self.dt, input.screen_mouse, input.primary_pressed)
-                .is_some()
-            {
+            if let Some(index) = window.update(self.dt, input.screen_mouse, input.primary_pressed) {
+                // add the selected modifier to the player's recipe
+                let modifier = window.selected_modifier(index);
+                self.arena.player_mut().projectile_recipe.add_modifier(modifier);
                 self.level_window = None;
             }
             return;

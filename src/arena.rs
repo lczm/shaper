@@ -9,6 +9,7 @@ use crate::constants::{
 };
 use crate::gfx::Shaders;
 use crate::input::Input;
+use crate::modifiers::ModifierContext;
 use crate::player::Player;
 use crate::state::GameState;
 use crate::world::GameEvent;
@@ -94,10 +95,16 @@ impl Arena {
         self.boss
             .update(dt, state, self.bounds, self.player.position, events);
 
+        let modifier_context = ModifierContext {
+            arena_bounds: self.bounds,
+            enemy_positions: vec![self.boss.position],
+            player_position: self.player.position,
+        };
+
         // update projectiles, some projectiles are beams or bullets
         // that has to go through their lifecycle
         for projectile in &mut state.projectiles {
-            projectile.update(dt);
+            projectile.update(dt, Some(&modifier_context));
         }
 
         // drop bullets that left the arena and beams that have expired
@@ -113,7 +120,7 @@ impl Arena {
         }
 
         // handle collisions after all movement is done
-        handle_collisions(state, &self.player, &self.boss, events);
+        handle_collisions(state, &self.player, &self.boss, self.bounds, events);
     }
 
     pub fn draw(&self, state: &GameState, shaders: &Shaders) {

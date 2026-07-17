@@ -2,6 +2,7 @@ use macroquad::prelude::*;
 
 use crate::boss::Boss;
 use crate::constants::{BEAM_WIDTH, PROJECTILE_RADIUS};
+use crate::modifiers::ModifierContext;
 use crate::player::Player;
 use crate::projectile::{Projectile, ProjectileKind};
 use crate::state::GameState;
@@ -44,6 +45,7 @@ pub fn handle_collisions(
     state: &mut GameState,
     player: &Player,
     boss: &Boss,
+    bounds: Rect,
     events: &mut Vec<GameEvent>,
 ) {
     // pull out what the retain closure needs so it doesn't borrow `player`
@@ -58,7 +60,7 @@ pub fn handle_collisions(
     // there can be more than 1 bullet that hits the boss,
     // so accumulate all boss projectile damages
     let mut boss_damage = 0;
-    state.projectiles.retain(|p| match p {
+    state.projectiles.retain_mut(|p| match p {
         // deal with bullet projectiles
         Projectile::Bullet(b) => match b.kind {
             // boss bullet hits the player: lose a life unless i-framed, consume the bullet
@@ -72,7 +74,8 @@ pub fn handle_collisions(
                     true
                 }
             }
-            // player bullet hits the boss: deal its damage and consume it
+            // player bullet hits the boss: deal its damage, run modifier hooks, and
+            // destroy unless a modifier says otherwise
             ProjectileKind::Player { damage } => {
                 if !boss_invulnerable
                     && circle_box_overlap(
@@ -83,8 +86,31 @@ pub fn handle_collisions(
                         boss_rot,
                     )
                 {
-                    boss_damage += damage;
-                    false
+                    let mut should_destroy = true;
+                    let mut bonus = 0;
+
+                    let modifiers = std::mem::take(&mut b.modifiers);
+                    let mut modifier_state = std::mem::take(&mut b.modifier_state);
+                    let ctx = ModifierContext {
+                        arena_bounds: bounds,
+                        enemy_positions: vec![boss_pos],
+                        player_position: player_pos,
+                    };
+
+                    for modifier in &modifiers {
+                        let result = modifier.on_hit(b, &mut modifier_state, &ctx);
+                        if !result.destroy {
+                            should_destroy = false;
+                        }
+                        bonus += result.extra_damage;
+                    }
+                    b.modifiers = modifiers;
+                    b.modifier_state = modifier_state;
+
+                    boss_damage += damage + bonus;
+
+                    // keep the bullet if any modifier said don't destroy
+                    !should_destroy
                 } else {
                     true
                 }
