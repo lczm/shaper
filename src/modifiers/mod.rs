@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
 
 use crate::{
-    constants::{HOMING_PROJECTILE_COLOR, HOMING_TURN_SPEED},
+    constants::{ARENA_BORDER_THICKNESS, HOMING_PROJECTILE_COLOR, HOMING_TURN_SPEED},
     projectile::BulletProjectile,
 };
 
@@ -60,6 +60,8 @@ pub enum Modifier {
     None,
     // steers towards the closest enemy
     Homing,
+    // bounces off the arena borders
+    Bouncing,
 }
 
 impl Modifier {
@@ -72,6 +74,10 @@ impl Modifier {
                 // intended heading even after we start bending it
                 state.original_direction = projectile.velocity.normalize_or_zero();
                 projectile.circle.color = HOMING_PROJECTILE_COLOR;
+            }
+            // bounce once is fine
+            Modifier::Bouncing => {
+                state.bounce_count = 1;
             }
         }
     }
@@ -120,6 +126,48 @@ impl Modifier {
                     projectile.velocity = new_dir * speed;
                 }
             }
+            Modifier::Bouncing => {
+                if state.bounce_count > 0 {
+                    let r = projectile.circle.radius;
+                    let inset = ARENA_BORDER_THICKNESS / 2.0;
+                    let bounds = ctx.arena_bounds;
+                    let min_x = bounds.x + inset + r;
+                    let max_x = bounds.x + bounds.w - inset - r;
+                    let min_y = bounds.y + inset + r;
+                    let max_y = bounds.y + bounds.h - inset - r;
+
+                    let mut bounced = false;
+                    if projectile.position.x < min_x {
+                        projectile.position.x = min_x;
+                        projectile.velocity.x = -projectile.velocity.x;
+                        bounced = true;
+                    } else if projectile.position.x > max_x {
+                        projectile.position.x = max_x;
+                        projectile.velocity.x = -projectile.velocity.x;
+                        bounced = true;
+                    }
+
+                    if projectile.position.y < min_y {
+                        projectile.position.y = min_y;
+                        projectile.velocity.y = -projectile.velocity.y;
+                        bounced = true;
+                    } else if projectile.position.y > max_y {
+                        projectile.position.y = max_y;
+                        projectile.velocity.y = -projectile.velocity.y;
+                        bounced = true;
+                    }
+
+                    if bounced {
+                        // slightly randomize the direction
+                        let speed = projectile.velocity.length();
+                        let angle = projectile.velocity.to_angle();
+                        let random_offset = macroquad::rand::gen_range(-0.175, 0.175);
+                        projectile.velocity = Vec2::from_angle(angle + random_offset) * speed;
+
+                        state.bounce_count -= 1;
+                    }
+                }
+            }
         }
     }
 
@@ -132,6 +180,7 @@ impl Modifier {
         match self {
             Modifier::None => HitResult::default(),
             Modifier::Homing => HitResult::default(),
+            Modifier::Bouncing => HitResult::default(),
         }
     }
 
@@ -139,6 +188,7 @@ impl Modifier {
         match self {
             Modifier::None => "Placeholder",
             Modifier::Homing => "Homing",
+            Modifier::Bouncing => "Bouncing",
         }
     }
 
@@ -146,6 +196,9 @@ impl Modifier {
         match self {
             Modifier::None => "No effect.",
             Modifier::Homing => "Projectiles steer toward the nearest enemy.",
+            Modifier::Bouncing => {
+                "Projectiles can bounce once off the arena bounds. When it bounces, it is a little random!"
+            }
         }
     }
 }

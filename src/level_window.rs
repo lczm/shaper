@@ -26,7 +26,7 @@ impl LevelUpOption {
 pub fn generate_placeholder_options() -> [LevelUpOption; 3] {
     [
         LevelUpOption::new(Modifier::Homing),
-        LevelUpOption::new(Modifier::None),
+        LevelUpOption::new(Modifier::Bouncing),
         LevelUpOption::new(Modifier::None),
     ]
 }
