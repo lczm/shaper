@@ -3,7 +3,7 @@ use macroquad::prelude::*;
 use crate::constants::{
     ARENA_BORDER_THICKNESS, HIT_INVULN_DURATION, PHASE_DISTANCE, PHASE_DURATION,
     PHASE_GHOST_OPACITY, PHASE_MIN_OPACITY, PHASE_TRAIL_LENGTH, PLAYER_CIRCLE_RADIUS, PLAYER_COLOR,
-    PLAYER_DEV_CHEAT_FIRE_INTERVAL, PLAYER_FIRE_INTERVAL, PLAYER_PHASING_COLOR,
+    PLAYER_DEV_BOMBS, PLAYER_DEV_CHEAT_FIRE_INTERVAL, PLAYER_FIRE_INTERVAL, PLAYER_PHASING_COLOR,
     PLAYER_PROJECTILE_COLOR, PLAYER_PROJECTILE_SPEED, PLAYER_SPEED, PLAYER_TRAIL_COLOR,
 };
 use crate::input::Input;
@@ -207,9 +207,10 @@ impl Player {
         self.hit_cooldown = self.hit_cooldown.max(duration);
     }
 
-    pub fn dev_damage_boost(&mut self) {
+    pub fn dev_damage_boost(&mut self, state: &mut GameState) {
         self.fire_interval = PLAYER_DEV_CHEAT_FIRE_INTERVAL;
         self.fire_timer = self.fire_interval;
+        state.bombs = PLAYER_DEV_BOMBS;
     }
 
     pub fn draw(&self) {

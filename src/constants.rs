@@ -38,6 +38,7 @@ pub const PLAYER_SPEED: f32 = 200.0;
 // seconds between player shots (the player fires continuously)
 pub const PLAYER_FIRE_INTERVAL: f32 = 0.20;
 pub const PLAYER_DEV_CHEAT_FIRE_INTERVAL: f32 = 0.05;
+pub const PLAYER_DEV_BOMBS: u32 = 9999;
 // upward travel speed of player bullets in pixels per second
 pub const PLAYER_PROJECTILE_SPEED: f32 = 450.0;
 

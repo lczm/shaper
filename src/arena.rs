@@ -99,7 +99,7 @@ impl Arena {
         events: &mut Vec<GameEvent>,
     ) {
         if input.f1_pressed {
-            self.player.dev_damage_boost();
+            self.player.dev_damage_boost(state);
         }
 
         self.player.update(dt, input, self.bounds, state, events);
