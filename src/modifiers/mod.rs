@@ -263,7 +263,7 @@ impl Modifier {
             Modifier::None => "Placeholder",
             Modifier::Homing => "Homing",
             Modifier::Bouncing => "Bouncing",
-            Modifier::Lightning => "Jacob's Ladder",
+            Modifier::Lightning => "Chain Lightning",
         }
     }
 
