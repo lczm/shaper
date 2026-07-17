@@ -14,7 +14,12 @@ impl Default for ModifiersGenerator {
 impl ModifiersGenerator {
     pub fn new() -> Self {
         Self {
-            available: vec![Modifier::Homing, Modifier::Bouncing, Modifier::Lightning],
+            available: vec![
+                Modifier::Homing,
+                Modifier::Bouncing,
+                Modifier::Lightning,
+                Modifier::Dna,
+            ],
         }
     }
 

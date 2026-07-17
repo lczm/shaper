@@ -7,6 +7,7 @@ use crate::constants::{
     PLAYER_PROJECTILE_COLOR, PLAYER_PROJECTILE_SPEED, PLAYER_SPEED, PLAYER_TRAIL_COLOR,
 };
 use crate::input::Input;
+use crate::modifiers::Modifier;
 use crate::projectile::{BulletProjectile, Projectile, ProjectileKind};
 use crate::recipe::ProjectileRecipe;
 use crate::shape::Circle;
@@ -142,21 +143,34 @@ impl Player {
         if self.fire_timer <= 0.0 {
             // keep the overshoot remainder so cadence doesnt drift
             self.fire_timer += self.fire_interval;
-            // continuously spawn new bullet projectile from the player position upwards
-            let mut bullet = BulletProjectile::new(
-                self.position,
-                vec2(0.0, -PLAYER_PROJECTILE_SPEED),
-                ProjectileKind::Player {
-                    damage: self.damage,
-                },
-                PLAYER_PROJECTILE_COLOR,
-            );
 
-            // apply all accumulated modifiers from the recipe
-            let (modifiers, modifier_state) = self.projectile_recipe.apply(&mut bullet);
-            bullet.modifiers = modifiers;
-            bullet.modifier_state = modifier_state;
-            state.projectiles.push(Projectile::Bullet(bullet));
+            let has_dna = self.projectile_recipe.modifiers.contains(&Modifier::Dna);
+            let spawns = if has_dna { 2 } else { 1 };
+
+            for i in 0..spawns {
+                // continuously spawn new bullet projectile from the player position upwards
+                let mut bullet = BulletProjectile::new(
+                    self.position,
+                    vec2(0.0, -PLAYER_PROJECTILE_SPEED),
+                    ProjectileKind::Player {
+                        damage: self.damage,
+                    },
+                    PLAYER_PROJECTILE_COLOR,
+                );
+
+                // apply all accumulated modifiers from the recipe
+                let (modifiers, mut modifier_state) = self.projectile_recipe.apply(&mut bullet);
+                if has_dna {
+                    modifier_state.dna_phase = if i == 0 { 0.0 } else { std::f32::consts::PI };
+                    // re-run spawn hooks so any phase-dependent logic (like colors) is applied
+                    for m in &modifiers {
+                        m.on_spawn(&mut bullet, &mut modifier_state);
+                    }
+                }
+                bullet.modifiers = modifiers;
+                bullet.modifier_state = modifier_state;
+                state.projectiles.push(Projectile::Bullet(bullet));
+            }
         }
     }
 

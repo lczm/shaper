@@ -196,3 +196,8 @@ pub const LIGHTNING_PROJECTILE_COLOR: Color = Color::new(1.0, 0.9, 0.2, 1.0);
 pub const LIGHTNING_BLOOM_COLOR: Color = Color::new(0.4, 0.7, 1.0, 1.0);
 // bright white blue core
 pub const LIGHTNING_CORE_COLOR: Color = Color::new(0.9, 0.95, 1.0, 1.0);
+// blue-ish
+pub const DNA_PROJECTILE_COLOR_1: Color = Color::new(0.18, 0.80, 1.0, 1.0);
+// pink ish
+pub const DNA_PROJECTILE_COLOR_2: Color = Color::new(1.0, 0.18, 0.70, 1.0);
+

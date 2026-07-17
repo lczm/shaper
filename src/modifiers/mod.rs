@@ -61,6 +61,7 @@ pub struct ModifierState {
     pub pierce_count: i32,
     // todo for bouncing around the arena
     pub bounce_count: i32,
+    pub dna_phase: f32,
 }
 
 impl Default for ModifierState {
@@ -70,11 +71,12 @@ impl Default for ModifierState {
             elapsed_time: 0.0,
             pierce_count: 0,
             bounce_count: 0,
+            dna_phase: 0.0,
         }
     }
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Modifier {
     // no op for placeholder
     None,
@@ -84,6 +86,8 @@ pub enum Modifier {
     Bouncing,
     // chain lightning on hit
     Lightning,
+    // 2 projectiles traveling in a DNA-helix wave pattern
+    Dna,
 }
 
 impl Modifier {
@@ -104,6 +108,13 @@ impl Modifier {
             }
             Modifier::Lightning => {
                 projectile.circle.color = LIGHTNING_PROJECTILE_COLOR;
+            }
+            Modifier::Dna => {
+                if (state.dna_phase - 0.0).abs() < 0.01 {
+                    projectile.circle.color = crate::constants::DNA_PROJECTILE_COLOR_1;
+                } else {
+                    projectile.circle.color = crate::constants::DNA_PROJECTILE_COLOR_2;
+                }
             }
         }
     }
@@ -195,6 +206,20 @@ impl Modifier {
                 }
             }
             Modifier::Lightning => {}
+            Modifier::Dna => {
+                let speed = projectile.velocity.length();
+                if speed > 0.0 {
+                    let dir = projectile.velocity.normalize_or_zero();
+                    let perp = vec2(-dir.y, dir.x);
+                    state.elapsed_time += dt;
+                    let frequency = 12.0;
+                    let amplitude = 250.0;
+                    let phase = state.dna_phase;
+                    let wave_vel =
+                        perp * (amplitude * (frequency * state.elapsed_time + phase).cos());
+                    projectile.position += wave_vel * dt;
+                }
+            }
         }
     }
 
@@ -258,6 +283,7 @@ impl Modifier {
                     secondary_hits,
                 }
             }
+            Modifier::Dna => HitResult::default(),
         }
     }
 
@@ -267,6 +293,7 @@ impl Modifier {
             Modifier::Homing => "Homing",
             Modifier::Bouncing => "Bouncing",
             Modifier::Lightning => "Chain Lightning",
+            Modifier::Dna => "DNA",
         }
     }
 
@@ -279,6 +306,9 @@ impl Modifier {
             }
             Modifier::Lightning => {
                 "Projectiles release chain lightning on hit, dealing 30% damage to up to 2 nearby targets."
+            }
+            Modifier::Dna => {
+                "Fires 2 projectiles in opposite sine waves, forming a double helix pattern."
             }
         }
     }
