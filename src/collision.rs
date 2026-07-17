@@ -57,6 +57,13 @@ pub fn handle_collisions(
     let boss_half = boss.rect.size / 2.0;
     let boss_rot = boss.rotation();
     let mut player_hit = false;
+    // unless iframedd, player colliding with the boss is also a hit
+    if !player_invulnerable
+        && circle_box_overlap(player_pos, player_r, boss_pos, boss_half, boss_rot)
+    {
+        player_hit = true;
+    }
+
     // there can be more than 1 bullet that hits the boss,
     // so accumulate all boss projectile damages
     let mut boss_damage = 0;
