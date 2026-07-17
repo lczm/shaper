@@ -28,6 +28,17 @@ impl ProjectileRecipe {
 
         (modifiers, state)
     }
+
+    pub fn potential_damage(&self, base_damage: i32) -> i32 {
+        let mut bonus = 0;
+        let mut multiplier = 1;
+        for modifier in &self.modifiers {
+            let (b, m) = modifier.damage_contribution(base_damage);
+            bonus += b;
+            multiplier *= m;
+        }
+        (base_damage + bonus) * multiplier
+    }
 }
 
 impl Default for ProjectileRecipe {

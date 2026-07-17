@@ -312,4 +312,15 @@ impl Modifier {
             }
         }
     }
+
+    pub fn damage_contribution(&self, base_damage: i32) -> (i32, i32) {
+        match self {
+            Modifier::Lightning => {
+                let bonus = ((base_damage as f32) * LIGHTNING_DAMAGE_MULTIPLIER).max(1.0) as i32 * 2;
+                (bonus, 1)
+            }
+            Modifier::Dna => (0, 2),
+            _ => (0, 1),
+        }
+    }
 }

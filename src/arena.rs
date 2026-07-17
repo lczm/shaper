@@ -78,7 +78,7 @@ impl Arena {
     }
 
     pub fn player_damage(&self) -> i32 {
-        self.player.damage()
+        self.player.potential_damage()
     }
 
     pub fn damage_boss(&mut self, damage: i32) {

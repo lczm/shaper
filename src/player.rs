@@ -57,6 +57,10 @@ impl Player {
         self.damage
     }
 
+    pub fn potential_damage(&self) -> i32 {
+        self.projectile_recipe.potential_damage(self.damage)
+    }
+
     pub fn calculate_movement_vector(input: &Input) -> Vec2 {
         let mut direction = Vec2::ZERO;
         if input.arrow_up {
