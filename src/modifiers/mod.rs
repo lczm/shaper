@@ -1,6 +1,9 @@
 use macroquad::prelude::*;
 
-use crate::{constants::HOMING_TURN_SPEED, projectile::BulletProjectile};
+use crate::{
+    constants::{HOMING_PROJECTILE_COLOR, HOMING_TURN_SPEED},
+    projectile::BulletProjectile,
+};
 
 // some context for the projectile modifiers to query the state
 // of the world, so they can do various modifiers to each of the projectiles
@@ -68,6 +71,7 @@ impl Modifier {
                 // record the original firing direction so we know the bullet's
                 // intended heading even after we start bending it
                 state.original_direction = projectile.velocity.normalize_or_zero();
+                projectile.circle.color = HOMING_PROJECTILE_COLOR;
             }
         }
     }

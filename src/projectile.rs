@@ -18,7 +18,7 @@ pub enum ProjectileKind {
 pub struct BulletProjectile {
     pub position: Vec2,
     pub velocity: Vec2,
-    circle: Circle,
+    pub circle: Circle,
     pub kind: ProjectileKind,
 
     // projectile has a list of modifiers that are applied to it

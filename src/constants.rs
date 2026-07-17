@@ -183,3 +183,5 @@ pub const GAME_OVER_BANNER_DURATION: f32 = 0.75;
 
 // modifiers
 pub const HOMING_TURN_SPEED: f32 = 4.0;
+// homing turns the projectiles purple
+pub const HOMING_PROJECTILE_COLOR: Color = Color::new(0.45, 0.15, 0.70, 1.0);
