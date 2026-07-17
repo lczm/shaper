@@ -9,7 +9,8 @@ use crate::world::GameEvent;
 // scale to make it bigger
 const DEV_UI_SCALE: f32 = 2.0;
 
-pub fn draw(state: &GameState, arena: &Arena, events: &mut Vec<GameEvent>) {
+pub fn update(state: &GameState, arena: &Arena, events: &mut Vec<GameEvent>) -> bool {
+    let mut wants_pointer = false;
     egui_macroquad::ui(|ctx| {
         ctx.set_pixels_per_point(DEV_UI_SCALE);
 
@@ -61,7 +62,13 @@ pub fn draw(state: &GameState, arena: &Arena, events: &mut Vec<GameEvent>) {
 
                 // draw_projectile_list(ui, state);
             });
+
+        wants_pointer = ctx.wants_pointer_input();
     });
+    wants_pointer
+}
+
+pub fn draw() {
     egui_macroquad::draw();
 }
 

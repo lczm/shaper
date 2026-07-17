@@ -133,7 +133,22 @@ impl World {
         self.compute_dt();
 
         // gather input here since World owns the camera (mouse -> world)
-        let input = Input::gather(&self.camera);
+        let mut input = Input::gather(&self.camera);
+
+        // Toggle dev ui before level_window check so that we can handle toggles
+        if self.level_window.is_none() && input.space_pressed {
+            self.dev_ui = !self.dev_ui;
+        }
+
+        let mut egui_wants_pointer = false;
+        if self.dev_ui {
+            egui_wants_pointer = dev_ui::update(&self.state, &self.arena, &mut self.events);
+        }
+
+        // If egui is consuming mouse pointer inputs, do not propagate click actions to the game/menus
+        if egui_wants_pointer {
+            input.primary_pressed = false;
+        }
 
         // if a level-up window is active, it gets exclusive control;
         // the game stays frozen until the player picks a card
@@ -155,11 +170,6 @@ impl World {
                 WorldState::Running => WorldState::Paused,
                 WorldState::Paused => WorldState::Running,
             };
-        }
-
-        // dev ui is a debug overlay; keep it usable while paused
-        if input.space_pressed {
-            self.dev_ui = !self.dev_ui;
         }
 
         // paused freezes everything below: shake, banner countdowns, reset,
@@ -317,7 +327,7 @@ impl World {
 
         // always render dev ui on top of everything else
         if self.dev_ui {
-            dev_ui::draw(&self.state, &self.arena, &mut self.events);
+            dev_ui::draw();
         }
     }
 }
