@@ -64,6 +64,19 @@ impl Arena {
         self.boss.is_invulnerable()
     }
 
+    // todo : can used to check when there are more enemies
+    pub fn alive_enemy_count(&self) -> (usize, Vec<Vec2>) {
+        let mut count = 0;
+        let mut positions = Vec::new();
+
+        if !self.boss.is_dead() {
+            count += 1;
+            positions.push(self.boss.position);
+        }
+        // todo : add more enemies here and increment
+        (count, positions)
+    }
+
     pub fn player_damage(&self) -> i32 {
         self.player.damage()
     }
@@ -95,9 +108,11 @@ impl Arena {
         self.boss
             .update(dt, state, self.bounds, self.player.position, events);
 
+        let (_, enemy_positions) = self.alive_enemy_count();
+
         let modifier_context = ModifierContext {
             arena_bounds: self.bounds,
-            enemy_positions: vec![self.boss.position],
+            enemy_positions,
             player_position: self.player.position,
         };
 

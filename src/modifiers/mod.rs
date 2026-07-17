@@ -102,6 +102,18 @@ impl Modifier {
 
                     let new_dir = Vec2::from_angle(current_dir.to_angle() + clamped);
                     projectile.velocity = new_dir * speed;
+                } else {
+                    // if no target (boss is dead), steer straight up
+                    let to_target = vec2(0.0, -1.0);
+                    let speed = projectile.velocity.length();
+                    let current_dir = projectile.velocity.normalize_or_zero();
+
+                    let max_angle = (HOMING_TURN_SPEED * dt).abs();
+                    let desired_angle = current_dir.angle_between(to_target);
+                    let clamped = desired_angle.clamp(-max_angle, max_angle);
+
+                    let new_dir = Vec2::from_angle(current_dir.to_angle() + clamped);
+                    projectile.velocity = new_dir * speed;
                 }
             }
         }
