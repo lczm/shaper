@@ -135,17 +135,15 @@ impl World {
         // gather input here since World owns the camera (mouse -> world)
         let mut input = Input::gather(&self.camera);
 
-        // Toggle dev ui before level_window check so that we can handle toggles
         if self.level_window.is_none() && input.space_pressed {
             self.dev_ui = !self.dev_ui;
         }
 
+        // this is for the case where some button overlaps with the egui window
         let mut egui_wants_pointer = false;
         if self.dev_ui {
             egui_wants_pointer = dev_ui::update(&self.state, &self.arena, &mut self.events);
         }
-
-        // If egui is consuming mouse pointer inputs, do not propagate click actions to the game/menus
         if egui_wants_pointer {
             input.primary_pressed = false;
         }
