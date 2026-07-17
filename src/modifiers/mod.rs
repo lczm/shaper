@@ -1,5 +1,8 @@
 use macroquad::prelude::*;
 
+pub mod generator;
+pub use generator::ModifiersGenerator;
+
 use crate::{
     constants::{
         ARENA_BORDER_THICKNESS, BOUNCING_PROJECTILE_COLOR, HOMING_PROJECTILE_COLOR,
@@ -71,7 +74,7 @@ impl Default for ModifierState {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum Modifier {
     // no op for placeholder
     None,

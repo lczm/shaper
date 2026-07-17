@@ -36,9 +36,7 @@ pub fn update(state: &GameState, arena: &Arena, events: &mut Vec<GameEvent>) -> 
                 ui.separator();
 
                 if ui.button("Trigger Level Up").clicked() {
-                    events.push(GameEvent::LevelUp {
-                        options: crate::level_window::generate_placeholder_options(),
-                    });
+                    events.push(GameEvent::LevelUp);
                 }
                 ui.separator();
 

@@ -23,14 +23,6 @@ impl LevelUpOption {
     }
 }
 
-pub fn generate_placeholder_options() -> [LevelUpOption; 3] {
-    [
-        LevelUpOption::new(Modifier::Homing),
-        LevelUpOption::new(Modifier::Bouncing),
-        LevelUpOption::new(Modifier::Lightning),
-    ]
-}
-
 // a window that pops up when the player levels up, showing 3 choices for upgrades
 // todo : projectile modifications
 pub struct LevelWindow {

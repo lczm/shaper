@@ -9,7 +9,8 @@ use crate::constants::{
 use crate::dev_ui;
 use crate::gfx::{Post, Shaders, Shake};
 use crate::input::Input;
-use crate::level_window::{LevelUpOption, LevelWindow, generate_placeholder_options};
+use crate::level_window::LevelWindow;
+use crate::modifiers::ModifiersGenerator;
 use crate::state::GameState;
 use crate::ui::Ui;
 
@@ -34,9 +35,8 @@ pub enum GameEvent {
     // pushed when the boss finishes its death animation
     GameOver,
 
-    // boss HP threshold crossed or tab pressed; carries the three upgrade
-    // options to present. the world spawns a LevelWindow from this event
-    LevelUp { options: [LevelUpOption; 3] },
+    // boss HP threshold crossed or tab pressed; the world spawns a LevelWindow from this event
+    LevelUp,
 
     // trigger a transient visual effect
     TriggerVisualEffect(VisualEffect),
@@ -79,6 +79,7 @@ pub struct World {
     // modal upgrade window, if one is currently being shown. created on-demand
     // from a GameEvent::LevelUp; absent otherwise
     level_window: Option<LevelWindow>,
+    modifiers_generator: ModifiersGenerator,
     // which boss HP-fraction thresholds have already triggered a level-up this
     // fight, so each one only fires once. cleared on game reset
     level_thresholds_opened: Vec<bool>,
@@ -110,6 +111,7 @@ impl World {
             dev_ui: false,
             world_state: WorldState::Running,
             level_window: None,
+            modifiers_generator: ModifiersGenerator::new(),
             // to track that the level up window is only shown once per threshold
             level_thresholds_opened: vec![false; BOSS_SPECIAL_HP_THRESHOLDS.len()],
             events: Vec::new(),
@@ -165,7 +167,11 @@ impl World {
                 self.arena
                     .player_mut()
                     .projectile_recipe
-                    .add_modifier(modifier);
+                    .add_modifier(modifier.clone());
+                
+                // remove the selected modifier from the pool in modifiers_generator
+                self.modifiers_generator.remove_modifier(&modifier);
+
                 self.level_window = None;
             }
             return;
@@ -197,9 +203,7 @@ impl World {
 
         // hotkey to force a level-up window for testing
         if input.tab_pressed && self.level_window.is_none() {
-            self.events.push(GameEvent::LevelUp {
-                options: generate_placeholder_options(),
-            });
+            self.events.push(GameEvent::LevelUp);
         }
 
         if input.tilde_pressed {
@@ -236,7 +240,8 @@ impl World {
                 GameEvent::GameOver => {
                     self.game_over_banner = GAME_OVER_BANNER_DURATION;
                 }
-                GameEvent::LevelUp { options } => {
+                GameEvent::LevelUp => {
+                    let options = self.modifiers_generator.generate_options();
                     self.level_window = Some(LevelWindow::new(options));
                 }
                 // all visual effects go through here, then it pushes some activevisual effect to the arena
@@ -280,6 +285,7 @@ impl World {
     fn reset_game(&mut self) {
         self.arena = Arena::new();
         self.state = GameState::new();
+        self.modifiers_generator = ModifiersGenerator::new();
         self.reset_level_state();
     }
 
@@ -296,9 +302,7 @@ impl World {
         for (i, &t) in BOSS_SPECIAL_HP_THRESHOLDS.iter().enumerate() {
             if !self.level_thresholds_opened[i] && frac <= t {
                 self.level_thresholds_opened[i] = true;
-                self.events.push(GameEvent::LevelUp {
-                    options: generate_placeholder_options(),
-                });
+                self.events.push(GameEvent::LevelUp);
                 // only one threshold can fire per frame
                 break;
             }
