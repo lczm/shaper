@@ -4,11 +4,12 @@ use macroquad::prelude::{get_fps, get_frame_time};
 use crate::arena::Arena;
 use crate::projectile::{Projectile, ProjectileKind};
 use crate::state::GameState;
+use crate::world::GameEvent;
 
 // scale to make it bigger
 const DEV_UI_SCALE: f32 = 2.0;
 
-pub fn draw(state: &GameState, arena: &Arena) {
+pub fn draw(state: &GameState, arena: &Arena, events: &mut Vec<GameEvent>) {
     egui_macroquad::ui(|ctx| {
         ctx.set_pixels_per_point(DEV_UI_SCALE);
 
@@ -31,6 +32,13 @@ pub fn draw(state: &GameState, arena: &Arena) {
                 ui.label(format!("lives: {}", state.lives));
                 ui.label(format!("damage: {player_damage}"));
                 ui.label(format!("bombs: {}", state.bombs));
+                ui.separator();
+
+                if ui.button("Trigger Level Up").clicked() {
+                    events.push(GameEvent::LevelUp {
+                        options: crate::level_window::generate_placeholder_options(),
+                    });
+                }
                 ui.separator();
 
                 let total = state.projectiles.len();

@@ -141,7 +141,10 @@ impl World {
             if let Some(index) = window.update(self.dt, input.screen_mouse, input.primary_pressed) {
                 // add the selected modifier to the player's recipe
                 let modifier = window.selected_modifier(index);
-                self.arena.player_mut().projectile_recipe.add_modifier(modifier);
+                self.arena
+                    .player_mut()
+                    .projectile_recipe
+                    .add_modifier(modifier);
                 self.level_window = None;
             }
             return;
@@ -162,6 +165,7 @@ impl World {
         // paused freezes everything below: shake, banner countdowns, reset,
         // the simulation, and the event drain
         if self.world_state == WorldState::Paused {
+            self.process_events();
             return;
         }
 
@@ -270,7 +274,7 @@ impl World {
         }
     }
 
-    fn draw(&self) {
+    fn draw(&mut self) {
         // update the camera only if there is some shake effect
         let shaken = self
             .shake
@@ -313,7 +317,7 @@ impl World {
 
         // always render dev ui on top of everything else
         if self.dev_ui {
-            dev_ui::draw(&self.state, &self.arena);
+            dev_ui::draw(&self.state, &self.arena, &mut self.events);
         }
     }
 }
