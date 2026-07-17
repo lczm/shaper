@@ -231,6 +231,18 @@ impl Player {
         state.bombs = PLAYER_DEV_BOMBS;
     }
 
+    pub fn dev_give_all_modifiers(&mut self, state: &mut GameState) {
+        // give myself all modifiers available in the modifiers generator, and remove them from the pool
+        state
+            .modifiers_generator
+            .available
+            .iter()
+            .for_each(|modifier| {
+                self.projectile_recipe.add_modifier(modifier.clone());
+            });
+        state.modifiers_generator.available.clear();
+    }
+
     pub fn draw(&self) {
         // ghost trail behind the phase movement: older ghosts fade out
         let trail_len = self.trail.len() as f32;

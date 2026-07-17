@@ -79,7 +79,6 @@ pub struct World {
     // modal upgrade window, if one is currently being shown. created on-demand
     // from a GameEvent::LevelUp; absent otherwise
     level_window: Option<LevelWindow>,
-    modifiers_generator: ModifiersGenerator,
     // which boss HP-fraction thresholds have already triggered a level-up this
     // fight, so each one only fires once. cleared on game reset
     level_thresholds_opened: Vec<bool>,
@@ -111,7 +110,6 @@ impl World {
             dev_ui: false,
             world_state: WorldState::Running,
             level_window: None,
-            modifiers_generator: ModifiersGenerator::new(),
             // to track that the level up window is only shown once per threshold
             level_thresholds_opened: vec![false; BOSS_SPECIAL_HP_THRESHOLDS.len()],
             events: Vec::new(),
@@ -168,9 +166,9 @@ impl World {
                     .player_mut()
                     .projectile_recipe
                     .add_modifier(modifier.clone());
-                
+
                 // remove the selected modifier from the pool in modifiers_generator
-                self.modifiers_generator.remove_modifier(&modifier);
+                self.state.modifiers_generator.remove_modifier(&modifier);
 
                 self.level_window = None;
             }
@@ -241,7 +239,7 @@ impl World {
                     self.game_over_banner = GAME_OVER_BANNER_DURATION;
                 }
                 GameEvent::LevelUp => {
-                    let options = self.modifiers_generator.generate_options();
+                    let options = self.state.modifiers_generator.generate_options();
                     self.level_window = Some(LevelWindow::new(options));
                 }
                 // all visual effects go through here, then it pushes some activevisual effect to the arena
@@ -285,7 +283,6 @@ impl World {
     fn reset_game(&mut self) {
         self.arena = Arena::new();
         self.state = GameState::new();
-        self.modifiers_generator = ModifiersGenerator::new();
         self.reset_level_state();
     }
 

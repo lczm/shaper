@@ -102,6 +102,10 @@ impl Arena {
             self.player.dev_damage_boost(state);
         }
 
+        if input.f2_pressed {
+            self.player.dev_give_all_modifiers(state);
+        }
+
         self.player.update(dt, input, self.bounds, state, events);
 
         // boss may push some projectiles into the game state; it aims beams at the player

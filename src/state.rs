@@ -1,6 +1,6 @@
-
 use crate::constants::{STARTING_BOMBS, STARTING_LIVES};
 use crate::gfx::ActiveVisualEffect;
+use crate::modifiers::ModifiersGenerator;
 use crate::projectile::Projectile;
 
 pub struct GameState {
@@ -8,6 +8,7 @@ pub struct GameState {
     pub bombs: u32,
     pub projectiles: Vec<Projectile>,
     pub visual_effects: Vec<ActiveVisualEffect>,
+    pub modifiers_generator: ModifiersGenerator,
 }
 
 impl GameState {
@@ -17,6 +18,7 @@ impl GameState {
             bombs: STARTING_BOMBS,
             projectiles: Vec::new(),
             visual_effects: Vec::new(),
+            modifiers_generator: ModifiersGenerator::new(),
         }
     }
 }
