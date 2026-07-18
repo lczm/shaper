@@ -87,7 +87,8 @@ pub struct Proto {
 }
 
 impl Proto {
-    pub fn new(position: Vec2, slot_idx: usize) -> Self {
+    pub fn new(position: Vec2, slot_idx: usize, extra_health: i32) -> Self {
+        let max_hp = PROTO_HEALTH + extra_health;
         let mut triangle = Triangle::new(PROTO_RADIUS, PROTO_COLOR);
         triangle.filled = false;
         let mask = Triangle::new(PROTO_RADIUS, BACKGROUND);
@@ -95,8 +96,8 @@ impl Proto {
             position,
             state: ProtoState::Init(ProtoInitState::new()),
             rotation: 0.0,
-            current_health: PROTO_HEALTH,
-            total_health: PROTO_HEALTH,
+            current_health: max_hp,
+            total_health: max_hp,
             triangle,
             mask,
             slot_idx,

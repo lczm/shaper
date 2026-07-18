@@ -41,7 +41,7 @@ pub fn update(state: &GameState, arena: &mut Arena, events: &mut Vec<GameEvent>)
                 ui.separator();
 
                 if ui.button("Spawn Proto").clicked() {
-                    arena.spawn_proto(false, 0.0);
+                    arena.spawn_proto(false, 0.0, state.protos_killed);
                 }
                 ui.separator();
 

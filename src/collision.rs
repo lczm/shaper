@@ -155,6 +155,7 @@ pub fn handle_collisions(
                     } else if let Some(idx) = hit_proto_idx {
                         if protos[idx].take_damage(total_damage) {
                             events.push(GameEvent::LevelUp);
+                            state.protos_killed += 1;
                         }
                     }
 
@@ -186,6 +187,7 @@ pub fn handle_collisions(
                             } else {
                                 if protos[target - 1].take_damage(hit.damage) {
                                     events.push(GameEvent::LevelUp);
+                                    state.protos_killed += 1;
                                 }
                             }
                         }

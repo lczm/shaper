@@ -44,7 +44,7 @@ pub const PLAYER_PROJECTILE_SPEED: f32 = 450.0;
 
 pub const BOSS_WIDTH: f32 = 150.0;
 pub const BOSS_HEIGHT: f32 = 150.0;
-pub const BOSS_HEALTH: i32 = 1000;
+pub const BOSS_HEALTH: i32 = 5000;
 
 // clockwise spin speed in radians per second
 // used when boss is idle (the steady speed it settles to)

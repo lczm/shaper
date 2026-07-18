@@ -44,8 +44,9 @@ impl Arena {
         let left_proto = Proto::new(
             boss_pos - vec2(PROTO_SPAWN_OFFSET_X, 0.0),
             PROTO_MAX_SLOTS - 1,
+            0,
         );
-        let right_proto = Proto::new(boss_pos + vec2(PROTO_SPAWN_OFFSET_X, 0.0), 0);
+        let right_proto = Proto::new(boss_pos + vec2(PROTO_SPAWN_OFFSET_X, 0.0), 0, 0);
 
         let proto_spawn_timer = rand::gen_range(PROTO_SPAWN_MIN_INTERVAL, PROTO_SPAWN_MAX_INTERVAL);
 
@@ -240,7 +241,7 @@ impl Arena {
         self.proto_beams.retain(|pb| !pb.is_fully_dead());
 
         // every nwo and then spawn soem protos when the boss is alive
-        self.spawn_proto(true, dt);
+        self.spawn_proto(true, dt, state.protos_killed);
 
         let (_, enemy_positions) = self.alive_enemy_count();
 
@@ -282,7 +283,7 @@ impl Arena {
         );
     }
 
-    pub fn spawn_proto(&mut self, check_timer: bool, dt: f32) {
+    pub fn spawn_proto(&mut self, check_timer: bool, dt: f32, protos_killed: u32) {
         if self.boss.is_dead() {
             return;
         }
@@ -308,7 +309,8 @@ impl Arena {
             let angle = (slot_idx as f32) * std::f32::consts::PI / (PROTO_MAX_SLOTS - 1) as f32;
             let spawn_pos =
                 self.boss.position + Vec2::new(angle.cos(), angle.sin()) * PROTO_SPAWN_OFFSET_X;
-            self.protos.push(Proto::new(spawn_pos, slot_idx));
+            let extra_health = (protos_killed as i32) * 100;
+            self.protos.push(Proto::new(spawn_pos, slot_idx, extra_health));
         }
     }
 

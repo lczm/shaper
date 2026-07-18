@@ -9,6 +9,7 @@ pub struct GameState {
     pub projectiles: Vec<Projectile>,
     pub visual_effects: Vec<ActiveVisualEffect>,
     pub modifiers_generator: ModifiersGenerator,
+    pub protos_killed: u32,
 }
 
 impl GameState {
@@ -19,6 +20,7 @@ impl GameState {
             projectiles: Vec::new(),
             visual_effects: Vec::new(),
             modifiers_generator: ModifiersGenerator::new(),
+            protos_killed: 0,
         }
     }
 }
