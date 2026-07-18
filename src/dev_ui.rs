@@ -45,24 +45,37 @@ pub fn update(state: &GameState, arena: &mut Arena, events: &mut Vec<GameEvent>)
                 }
                 ui.separator();
 
-                let total = state.projectiles.len();
-                let boss = state
-                    .projectiles
-                    .iter()
-                    .filter(
-                        |p| matches!(p, Projectile::Bullet(b) if b.kind == ProjectileKind::Boss),
-                    )
-                    .count();
-                let beams = state
-                    .projectiles
-                    .iter()
-                    .filter(|p| matches!(p, Projectile::Beam(_)))
-                    .count();
-                let player = total - boss - beams;
-                ui.label(format!(
-                    "projectiles: {total}  (boss {boss}, player {player}, beam {beams})"
-                ));
+                ui.collapsing("Boss Control", |ui| {
+                    if ui.button("Force 75% Transition").clicked() {
+                        arena.dev_force_boss_transition_75();
+                    }
+                    if ui.button("Force 50% Transition").clicked() {
+                        arena.dev_force_boss_transition_50();
+                    }
+                    if ui.button("Force 25% Transition").clicked() {
+                        arena.dev_force_boss_transition_25();
+                    }
+                });
+                ui.separator();
 
+                // dont really need to know all the projectiles for now
+                // let total = state.projectiles.len();
+                // let boss = state
+                //     .projectiles
+                //     .iter()
+                //     .filter(
+                //         |p| matches!(p, Projectile::Bullet(b) if b.kind == ProjectileKind::Boss),
+                //     )
+                //     .count();
+                // let beams = state
+                //     .projectiles
+                //     .iter()
+                //     .filter(|p| matches!(p, Projectile::Beam(_)))
+                //     .count();
+                // let player = total - boss - beams;
+                // ui.label(format!(
+                //     "projectiles: {total}  (boss {boss}, player {player}, beam {beams})"
+                // ));
                 // draw_projectile_list(ui, state);
             });
 

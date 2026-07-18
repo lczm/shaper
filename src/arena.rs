@@ -111,6 +111,18 @@ impl Arena {
         self.boss.take_damage(damage);
     }
 
+    pub fn dev_force_boss_transition_75(&mut self) {
+        self.boss.force_transition_75();
+    }
+
+    pub fn dev_force_boss_transition_50(&mut self) {
+        self.boss.force_transition_50();
+    }
+
+    pub fn dev_force_boss_transition_25(&mut self) {
+        self.boss.force_transition_25();
+    }
+
     // set bomb at position (player center) and grant iframes
     pub fn detonate_bomb(&mut self, position: Vec2) {
         self.bomb = Some(Bomb::new(position, self.player.bomb_radius));

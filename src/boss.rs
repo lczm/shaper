@@ -602,6 +602,18 @@ impl Boss {
         self.current_health = (self.current_health - damage).max(0);
     }
 
+    pub fn force_transition_75(&mut self) {
+        self.state = BossState::Transition75(Transition75State::new());
+    }
+
+    pub fn force_transition_50(&mut self) {
+        self.state = BossState::Transition50(Transition50State::new());
+    }
+
+    pub fn force_transition_25(&mut self) {
+        self.state = BossState::Transition25(Transition25State::new());
+    }
+
     pub fn draw(&self) {
         // once dead the boss is gone entirely
         if matches!(self.state, BossState::Dead) {
