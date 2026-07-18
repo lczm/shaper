@@ -10,8 +10,8 @@ use crate::constants::{
     BOSS_SPECIAL_DURATION, BOSS_SPECIAL_FIRE_INTERVAL, BOSS_SPECIAL_PROJECTILE_COLOR,
     BOSS_SPECIAL_PROJECTILE_SPEED, BOSS_SPECIAL_SPINUP_HOLD, BOSS_SPECIAL_SWEEP_STEP,
     BOSS_SPINUP_DURATION, BOSS_SPINUP_HOLD, BOSS_SPINUP_PEAK_SPEED, BOSS_SPINUP_RAMP_DOWN,
-    BOSS_SPINUP_RAMP_UP, BOSS_WIDTH, HEALTH_BAR_DROP_SPEED, HEIGHT, PROJECTILE_RADIUS,
-    PROJECTILE_SPEED,
+    BOSS_SPINUP_RAMP_UP, BOSS_TRANSITION_75_DURATION, BOSS_WIDTH, HEALTH_BAR_DROP_SPEED, HEIGHT,
+    PROJECTILE_RADIUS, PROJECTILE_SPEED,
 };
 use crate::projectile::{BeamProjectile, BulletProjectile, Projectile, ProjectileKind};
 use crate::shape::Rectangle;
@@ -319,7 +319,7 @@ impl Boss {
     fn update_transition_75(&mut self, dt: f32, mut trans: Transition75State) {
         trans.elapsed += dt;
         self.rotation += BOSS_IDLE_ROTATION_SPEED * dt;
-        if trans.elapsed >= 1.0 {
+        if trans.elapsed >= BOSS_TRANSITION_75_DURATION {
             self.state = BossState::Idle(IdleState::new());
         } else {
             self.state = BossState::Transition75(trans);
@@ -585,6 +585,10 @@ impl Boss {
             self.state,
             BossState::DeathBurst(_) | BossState::Dying(_) | BossState::Dead
         )
+    }
+
+    pub fn is_in_transition_75(&self) -> bool {
+        matches!(self.state, BossState::Transition75(_))
     }
 
     // chip drains smoothly towards current health

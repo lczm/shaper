@@ -95,6 +95,7 @@ pub const BOSS_CLUSTER_INTRA_GAP: f32 = 0.11;
 pub const BOSS_SPECIAL_SWEEP_STEP: f32 = 0.12;
 // these projectiles should move faster so its harder
 pub const BOSS_SPECIAL_PROJECTILE_SPEED: f32 = 150.0;
+pub const BOSS_TRANSITION_75_DURATION: f32 = 4.0;
 
 pub const PROJECTILE_RADIUS: f32 = 6.0;
 // travel speed in pixels per second
@@ -208,6 +209,7 @@ pub const TRIPLE_SHOT_SPREAD_ANGLE: f32 = std::f32::consts::FRAC_PI_4;
 pub const PROTO_HEALTH: i32 = 80;
 pub const PROTO_RADIUS: f32 = 24.0;
 pub const PROTO_COLOR: Color = Color::new(0.12, 0.53, 0.53, 1.0); // dark green-blue
+pub const PROTO_BEAM_COLOR: Color = Color::new(1.0, 0.4, 0.4, 1.0); // Warm red color to fit the beam theme
 pub const PROTO_PROJECTILE_COLOR: Color = Color::new(0.30, 0.85, 0.70, 1.0); // bright green-blue
 pub const PROTO_PROJECTILE_SPEED: f32 = 140.0;
 pub const PROTO_SPAWN_OFFSET_X: f32 = 140.0;
@@ -226,3 +228,4 @@ pub const PROTO_SPINUP_DURATION: f32 =
 pub const PROTO_DEATH_INITIAL_DROP_SPEED: f32 = 30.0;
 pub const PROTO_DEATH_GRAVITY: f32 = 1200.0;
 pub const PROTO_DEATH_SPIN_HOLD: f32 = 5.0;
+pub const PROTO_BEAM_SPEED: f32 = 175.0;

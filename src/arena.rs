@@ -5,14 +5,16 @@ use crate::boss::Boss;
 use crate::collision::handle_collisions;
 use crate::constants::{
     ARENA_BORDER_COLOR, ARENA_BORDER_THICKNESS, ARENA_MARGIN_HEIGHT, ARENA_MARGIN_WIDTH,
-    BACKGROUND, BOMB_DURATION, FRAME_MASK_PAD, HEIGHT, PROTO_MAX_SLOTS, PROTO_SPAWN_MAX_INTERVAL,
-    PROTO_SPAWN_MIN_INTERVAL, PROTO_SPAWN_OFFSET_X,
+    BACKGROUND, BOMB_DURATION, FRAME_MASK_PAD, HEIGHT, PROTO_MAX_SLOTS, PROTO_RADIUS,
+    PROTO_SPAWN_MAX_INTERVAL, PROTO_SPAWN_MIN_INTERVAL, PROTO_SPAWN_OFFSET_X,
 };
 use crate::gfx::Shaders;
 use crate::input::Input;
 use crate::modifiers::ModifierContext;
 use crate::player::Player;
+use crate::projectile::{BeamProjectile, Projectile};
 use crate::proto::Proto;
+use crate::proto_beam::{ProtoBeam, ProtoBeamState};
 use crate::state::GameState;
 use crate::world::GameEvent;
 
@@ -25,6 +27,7 @@ pub struct Arena {
     proto_spawn_timer: f32,
     // active clearing blast, if one is currently going off
     bomb: Option<Bomb>,
+    pub proto_beams: Vec<ProtoBeam>,
 }
 
 impl Arena {
@@ -54,6 +57,7 @@ impl Arena {
             protos: vec![left_proto, right_proto],
             proto_spawn_timer,
             bomb: None,
+            proto_beams: Vec::new(),
         }
     }
 
@@ -164,6 +168,78 @@ impl Arena {
         // unless its dead
         self.protos.retain(|proto| !proto.is_fully_dead());
 
+        // manage spawn and death of proto_beam pairs
+        // todo : maybe for 50% and 25% as well
+        let transition_active = self.boss.is_in_transition_75();
+        if transition_active {
+            if self.proto_beams.is_empty() {
+                // spawn the left and right proto beams, and a beam projectile between them
+                let y_start = self.bounds.y + self.bounds.h / 2.0;
+                let left_pos = vec2(self.bounds.x + PROTO_RADIUS, y_start);
+                let right_pos = vec2(self.bounds.x + self.bounds.w - PROTO_RADIUS, y_start);
+
+                self.proto_beams.push(ProtoBeam::new(left_pos, -1.0));
+                self.proto_beams.push(ProtoBeam::new(right_pos, 1.0));
+
+                let mut beam = BeamProjectile::new(left_pos, right_pos);
+                beam.is_proto_beam = true;
+                state.projectiles.push(Projectile::Beam(beam));
+            }
+        }
+        // not in transition state and the proto beams are still active, so turn them off
+        else if !self.proto_beams.is_empty() {
+            let is_any_active = self
+                .proto_beams
+                .iter()
+                .any(|pb| pb.state == ProtoBeamState::Active);
+            if is_any_active {
+                // turn off the beam
+                for proj in &mut state.projectiles {
+                    if let Projectile::Beam(beam) = proj {
+                        if beam.is_proto_beam {
+                            beam.is_proto_beam = false;
+                            beam.elapsed = 9999.0;
+                        }
+                    }
+                }
+                // tell the ProtoBeams to die
+                for pb in &mut self.proto_beams {
+                    pb.die();
+                }
+            }
+        }
+
+        // update proto_beams
+        for pb in &mut self.proto_beams {
+            pb.update(dt, self.bounds);
+        }
+
+        // sync dynamic beam position
+        if !self.proto_beams.is_empty() {
+            let left_pos = self
+                .proto_beams
+                .iter()
+                .find(|pb| pb.side < 0.0)
+                .map(|pb| pb.position);
+            let right_pos = self
+                .proto_beams
+                .iter()
+                .find(|pb| pb.side > 0.0)
+                .map(|pb| pb.position);
+            if let (Some(lp), Some(rp)) = (left_pos, right_pos) {
+                for proj in &mut state.projectiles {
+                    if let Projectile::Beam(beam) = proj {
+                        if beam.is_proto_beam {
+                            beam.start = lp;
+                            beam.end = rp;
+                        }
+                    }
+                }
+            }
+        }
+
+        self.proto_beams.retain(|pb| !pb.is_fully_dead());
+
         // every nwo and then spawn soem protos when the boss is alive
         self.spawn_proto(true, dt);
 
@@ -251,6 +327,10 @@ impl Arena {
 
         for proto in &self.protos {
             proto.draw();
+        }
+
+        for pb in &self.proto_beams {
+            pb.draw();
         }
 
         self.boss.draw();

@@ -80,7 +80,8 @@ pub struct BeamProjectile {
     pub start: Vec2,
     pub end: Vec2,
     // needed to track the -> spawn -> inactive indicator -> active -> despawn
-    elapsed: f32,
+    pub elapsed: f32,
+    pub is_proto_beam: bool,
 }
 
 impl BeamProjectile {
@@ -89,11 +90,22 @@ impl BeamProjectile {
             start,
             end,
             elapsed: 0.0,
+            is_proto_beam: false,
         }
     }
 
     pub fn update(&mut self, dt: f32) {
         self.elapsed += dt;
+
+        // loop if its a proto_beam beam
+        if self.is_proto_beam {
+            let active_start = BEAM_STARTUP_DURATION;
+            let active_end = BEAM_STARTUP_DURATION + BEAM_ACTIVE_DURATION - 0.01;
+            if self.elapsed >= active_end {
+                // lock it in active phase
+                self.elapsed = active_start + 0.1;
+            }
+        }
     }
 
     // it is active only after the startup duration
