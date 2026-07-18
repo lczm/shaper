@@ -18,12 +18,29 @@ impl ProjectileRecipe {
     // to apply a recipe to a projectile
     // we clone all the modifiers onto the projectiles
     // and run on_spawn for each of them
-    pub fn apply(&self, bullet: &mut BulletProjectile) -> (Vec<Modifier>, ModifierState) {
+    pub fn apply(
+        &self,
+        bullet: &mut BulletProjectile,
+        index: usize,
+    ) -> (Vec<Modifier>, ModifierState) {
         let modifiers: Vec<Modifier> = self.modifiers.clone();
         let mut state = ModifierState::default();
 
+        if modifiers.contains(&Modifier::Dna) {
+            state.dna_phase = if index == 0 {
+                0.0
+            } else {
+                std::f32::consts::PI
+            };
+        }
+
         for modifier in &modifiers {
-            modifier.on_spawn(bullet, &mut state);
+            modifier.on_spawn(
+                &mut state,
+                &mut bullet.position,
+                &mut bullet.velocity,
+                &mut bullet.circle,
+            );
         }
 
         (modifiers, state)

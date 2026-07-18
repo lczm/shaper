@@ -96,8 +96,6 @@ pub fn handle_collisions(
                     let mut should_destroy = true;
                     let mut bonus = 0;
 
-                    let modifiers = std::mem::take(&mut b.modifiers);
-                    let mut modifier_state = std::mem::take(&mut b.modifier_state);
                     let ctx = ModifierContext {
                         arena_bounds: bounds,
                         enemy_positions: vec![boss_pos],
@@ -105,28 +103,30 @@ pub fn handle_collisions(
                     };
 
                     let mut secondary_hits = Vec::new();
-                    for modifier in &modifiers {
-                        let mut result = modifier.on_hit(b, &mut modifier_state, &ctx);
+                    for modifier in &b.modifiers {
+                        let mut result = modifier.on_hit(
+                            &mut b.modifier_state,
+                            &b.position,
+                            &b.velocity,
+                            &b.kind,
+                            &ctx,
+                        );
                         if !result.destroy {
                             should_destroy = false;
                         }
                         bonus += result.extra_damage;
                         secondary_hits.append(&mut result.secondary_hits);
                     }
-                    b.modifiers = modifiers;
-                    b.modifier_state = modifier_state;
 
                     boss_damage += damage + bonus;
 
                     for hit in secondary_hits {
                         boss_damage += hit.damage;
                         let visual_effect = match hit.kind {
-                            SecondaryHitKind::Lightning => {
-                                crate::world::VisualEffect::Lightning {
-                                    start: b.position,
-                                    end: hit.position,
-                                }
-                            }
+                            SecondaryHitKind::Lightning => crate::world::VisualEffect::Lightning {
+                                start: b.position,
+                                end: hit.position,
+                            },
                         };
                         events.push(GameEvent::TriggerVisualEffect(visual_effect));
                     }

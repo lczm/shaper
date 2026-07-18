@@ -46,13 +46,16 @@ impl BulletProjectile {
 
         // run modifier on_update hooks (player bullets only)
         if let Some(ctx) = ctx {
-            let modifiers = std::mem::take(&mut self.modifiers);
-            let mut state = std::mem::take(&mut self.modifier_state);
-            for modifier in &modifiers {
-                modifier.on_update(self, &mut state, dt, ctx);
+            for modifier in &self.modifiers {
+                modifier.on_update(
+                    &mut self.modifier_state,
+                    &mut self.position,
+                    &mut self.velocity,
+                    &mut self.circle,
+                    dt,
+                    ctx,
+                );
             }
-            self.modifiers = modifiers;
-            self.modifier_state = state;
         }
     }
 

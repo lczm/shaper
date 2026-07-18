@@ -163,14 +163,7 @@ impl Player {
                 );
 
                 // apply all accumulated modifiers from the recipe
-                let (modifiers, mut modifier_state) = self.projectile_recipe.apply(&mut bullet);
-                if has_dna {
-                    modifier_state.dna_phase = if i == 0 { 0.0 } else { std::f32::consts::PI };
-                    // re-run spawn hooks so any phase-dependent logic (like colors) is applied
-                    for m in &modifiers {
-                        m.on_spawn(&mut bullet, &mut modifier_state);
-                    }
-                }
+                let (modifiers, modifier_state) = self.projectile_recipe.apply(&mut bullet, i);
                 bullet.modifiers = modifiers;
                 bullet.modifier_state = modifier_state;
                 state.projectiles.push(Projectile::Bullet(bullet));
