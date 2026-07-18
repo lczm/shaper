@@ -49,6 +49,10 @@ impl Arena {
         &mut self.player
     }
 
+    pub fn player(&self) -> &Player {
+        &self.player
+    }
+
     // (current, total) boss health for the hud health bar
     pub fn boss_health(&self) -> (i32, i32) {
         self.boss.health()

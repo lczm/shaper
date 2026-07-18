@@ -7,7 +7,7 @@ use crate::constants::{
     HEALTH_BAR_MARKER_COLOR, HEALTH_BAR_MARKER_THICKNESS, HEALTH_BAR_TOP_MARGIN, HEIGHT,
     PLAYER_FIRE_INTERVAL, UI_TEXT_COLOR, WIDTH,
 };
-use crate::player;
+use crate::modifiers::Modifier;
 use crate::state::GameState;
 
 pub struct Ui;
@@ -30,6 +30,7 @@ impl Ui {
         lost_banner: f32,
         game_over_banner: f32,
         paused: bool,
+        modifiers: &[Modifier],
     ) {
         let sx = screen_width() / WIDTH;
         let sy = screen_height() / HEIGHT;
@@ -94,6 +95,59 @@ impl Ui {
             32.0 * sx,
             UI_TEXT_COLOR,
         );
+
+        // separator line below fire rate
+        y += 24.0 * sy;
+        draw_line(x, y, x + 500.0 * sx, y, 2.0 * sx, ARENA_BORDER_COLOR);
+
+        //g et all modifiers
+        let active_modifiers: Vec<&Modifier> = modifiers.iter().collect();
+        if !active_modifiers.is_empty() {
+            // draw heading
+            y += 32.0 * sy;
+            draw_text("Modifiers:", x, y, 24.0 * sx, ARENA_BORDER_COLOR);
+
+            let bottom_limit = screen_height() - 30.0 * sy;
+            let mut available_height = bottom_limit - (y + 10.0 * sy);
+
+            let desc_font_size = 16.0 * sx;
+            let title_font_size = 20.0 * sx;
+            let max_desc_width = 480.0 * sx;
+            let indent = 20.0 * sx;
+
+            let mut modifiers_to_draw = Vec::new();
+            for &modifier in active_modifiers.iter() {
+                let desc_lines =
+                    crate::utils::wrap_text(modifier.description(), max_desc_width, desc_font_size);
+                let desc_height = desc_lines.len() as f32 * 18.0 * sy;
+                let needed_height = 34.0 * sy + desc_height;
+
+                if available_height >= needed_height {
+                    available_height -= needed_height;
+                    modifiers_to_draw.push((modifier, desc_lines));
+                } else {
+                    break;
+                }
+            }
+
+            for (modifier, desc_lines) in modifiers_to_draw {
+                y += 28.0 * sy;
+                // draw name
+                draw_text(modifier.name(), x, y, title_font_size, UI_TEXT_COLOR);
+                // draw description
+                for line in desc_lines {
+                    y += 18.0 * sy;
+                    draw_text(
+                        &line,
+                        x + indent,
+                        y,
+                        desc_font_size,
+                        Color::new(0.70, 0.72, 0.76, 1.0),
+                    );
+                }
+                y += 6.0 * sy;
+            }
+        }
 
         // the different banners
         if paused {

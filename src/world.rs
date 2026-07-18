@@ -10,7 +10,6 @@ use crate::dev_ui;
 use crate::gfx::{Post, Shaders, Shake};
 use crate::input::Input;
 use crate::level_window::LevelWindow;
-use crate::modifiers::ModifiersGenerator;
 use crate::state::GameState;
 use crate::ui::Ui;
 
@@ -338,6 +337,7 @@ impl World {
             self.lost_banner,
             self.game_over_banner,
             self.world_state == WorldState::Paused,
+            &self.arena.player().projectile_recipe.modifiers,
         );
 
         // level-up window draws last so it covers the arena, the hud, and the
