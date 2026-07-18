@@ -206,7 +206,7 @@ pub const DNA_PROJECTILE_COLOR_2: Color = Color::new(1.0, 0.18, 0.70, 1.0);
 pub const TRIPLE_SHOT_SPREAD_ANGLE: f32 = std::f32::consts::FRAC_PI_4;
 
 // proto (subordinate) enemy constants
-pub const PROTO_HEALTH: i32 = 80;
+pub const PROTO_HEALTH: i32 = 100;
 pub const PROTO_RADIUS: f32 = 24.0;
 pub const PROTO_COLOR: Color = Color::new(0.12, 0.53, 0.53, 1.0); // dark green-blue
 pub const PROTO_BEAM_COLOR: Color = Color::new(1.0, 0.4, 0.4, 1.0); // Warm red color to fit the beam theme
