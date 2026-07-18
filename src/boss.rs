@@ -41,6 +41,8 @@ struct IdleState {
     volley: i32,
     // counts down to the next beam volley
     beam_timer: f32,
+    // counts down to the next special move
+    special_timer: f32,
 }
 
 impl IdleState {
@@ -49,7 +51,41 @@ impl IdleState {
             fire_timer: BOSS_FIRE_INTERVAL,
             volley: 0,
             beam_timer: BOSS_BEAM_INTERVAL,
+            special_timer: rand::gen_range(8.0, 15.0),
         }
+    }
+}
+
+#[derive(Clone, Copy)]
+struct Transition75State {
+    elapsed: f32,
+}
+
+impl Transition75State {
+    fn new() -> Self {
+        Transition75State { elapsed: 0.0 }
+    }
+}
+
+#[derive(Clone, Copy)]
+struct Transition50State {
+    elapsed: f32,
+}
+
+impl Transition50State {
+    fn new() -> Self {
+        Transition50State { elapsed: 0.0 }
+    }
+}
+
+#[derive(Clone, Copy)]
+struct Transition25State {
+    elapsed: f32,
+}
+
+impl Transition25State {
+    fn new() -> Self {
+        Transition25State { elapsed: 0.0 }
     }
 }
 
@@ -107,13 +143,15 @@ enum BossState {
     Init(InitState),
     Idle(IdleState),
     SpecialMove(SpecialMoveState),
+    Transition75(Transition75State),
+    Transition50(Transition50State),
+    Transition25(Transition25State),
     // expanding ring clearing the field right after health reaches zero
     DeathBurst(DeathBurstState),
     // spinning and dropping off-screen after the burst clears
     Dying(DyingState),
     // animation finished; the boss is gone and no longer drawn or updated
     Dead,
-    // future: Moving { .. }, Attacking { .. }, etc.
 }
 
 pub struct Boss {
@@ -182,7 +220,11 @@ impl Boss {
             if let Some(&threshold) = BOSS_SPECIAL_HP_THRESHOLDS.get(self.special_moves_fired) {
                 if health_frac <= threshold {
                     self.special_moves_fired += 1;
-                    self.state = BossState::SpecialMove(SpecialMoveState::new());
+                    match self.special_moves_fired {
+                        1 => self.state = BossState::Transition75(Transition75State::new()),
+                        2 => self.state = BossState::Transition50(Transition50State::new()),
+                        _ => self.state = BossState::Transition25(Transition25State::new()),
+                    }
                 }
             }
         }
@@ -191,6 +233,9 @@ impl Boss {
             BossState::Init(init) => self.update_init(dt, init, state),
             BossState::Idle(idle) => self.update_idle(dt, idle, state, bounds, player_pos),
             BossState::SpecialMove(sm) => self.update_special_move(dt, sm, state),
+            BossState::Transition75(trans) => self.update_transition_75(dt, trans),
+            BossState::Transition50(trans) => self.update_transition_50(dt, trans),
+            BossState::Transition25(trans) => self.update_transition_25(dt, trans),
             BossState::DeathBurst(burst) => self.update_death_burst(dt, burst, state, bounds),
             BossState::Dying(dying) => self.update_dying(dt, dying, events),
             // nothing left to do once the boss is gone
@@ -237,7 +282,13 @@ impl Boss {
             self.fire_beams(state, bounds, player_pos);
         }
 
-        self.state = BossState::Idle(idle);
+        // tick and check special move timer
+        idle.special_timer -= dt;
+        if idle.special_timer <= 0.0 {
+            self.state = BossState::SpecialMove(SpecialMoveState::new());
+        } else {
+            self.state = BossState::Idle(idle);
+        }
     }
 
     // spin up while spraying
@@ -262,6 +313,36 @@ impl Boss {
             self.state = BossState::Idle(IdleState::new());
         } else {
             self.state = BossState::SpecialMove(special_move);
+        }
+    }
+
+    fn update_transition_75(&mut self, dt: f32, mut trans: Transition75State) {
+        trans.elapsed += dt;
+        self.rotation += BOSS_IDLE_ROTATION_SPEED * dt;
+        if trans.elapsed >= 1.0 {
+            self.state = BossState::Idle(IdleState::new());
+        } else {
+            self.state = BossState::Transition75(trans);
+        }
+    }
+
+    fn update_transition_50(&mut self, dt: f32, mut trans: Transition50State) {
+        trans.elapsed += dt;
+        self.rotation += BOSS_IDLE_ROTATION_SPEED * dt;
+        if trans.elapsed >= 1.0 {
+            self.state = BossState::Idle(IdleState::new());
+        } else {
+            self.state = BossState::Transition50(trans);
+        }
+    }
+
+    fn update_transition_25(&mut self, dt: f32, mut trans: Transition25State) {
+        trans.elapsed += dt;
+        self.rotation += BOSS_IDLE_ROTATION_SPEED * dt;
+        if trans.elapsed >= 1.0 {
+            self.state = BossState::Idle(IdleState::new());
+        } else {
+            self.state = BossState::Transition25(trans);
         }
     }
 
@@ -490,6 +571,9 @@ impl Boss {
             self.state,
             BossState::Init(_)
                 | BossState::SpecialMove(_)
+                | BossState::Transition75(_)
+                | BossState::Transition50(_)
+                | BossState::Transition25(_)
                 | BossState::DeathBurst(_)
                 | BossState::Dying(_)
                 | BossState::Dead
