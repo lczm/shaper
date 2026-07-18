@@ -9,7 +9,7 @@ use crate::world::GameEvent;
 // scale to make it bigger
 const DEV_UI_SCALE: f32 = 2.0;
 
-pub fn update(state: &GameState, arena: &Arena, events: &mut Vec<GameEvent>) -> bool {
+pub fn update(state: &GameState, arena: &mut Arena, events: &mut Vec<GameEvent>) -> bool {
     let mut wants_pointer = false;
     egui_macroquad::ui(|ctx| {
         ctx.set_pixels_per_point(DEV_UI_SCALE);
@@ -37,6 +37,11 @@ pub fn update(state: &GameState, arena: &Arena, events: &mut Vec<GameEvent>) -> 
 
                 if ui.button("Trigger Level Up").clicked() {
                     events.push(GameEvent::LevelUp);
+                }
+                ui.separator();
+
+                if ui.button("Spawn Proto").clicked() {
+                    arena.spawn_proto(false, 0.0);
                 }
                 ui.separator();
 

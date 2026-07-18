@@ -153,7 +153,7 @@ impl Arena {
         self.protos.retain(|proto| !proto.is_fully_dead());
 
         // every nwo and then spawn soem protos when the boss is alive
-        self.spawn_proto_periodically(dt);
+        self.spawn_proto(true, dt);
 
         let (_, enemy_positions) = self.alive_enemy_count();
 
@@ -195,33 +195,33 @@ impl Arena {
         );
     }
 
-    // when the boss isnt dead, spawn some protos at random intervals
-    fn spawn_proto_periodically(&mut self, dt: f32) {
+    pub fn spawn_proto(&mut self, check_timer: bool, dt: f32) {
         if self.boss.is_dead() {
             return;
         }
 
-        self.proto_spawn_timer -= dt;
-        if self.proto_spawn_timer <= 0.0 {
+        if check_timer {
+            self.proto_spawn_timer -= dt;
+            if self.proto_spawn_timer > 0.0 {
+                return;
+            }
             // reset the timer
             self.proto_spawn_timer =
                 rand::gen_range(PROTO_SPAWN_MIN_INTERVAL, PROTO_SPAWN_MAX_INTERVAL);
+        }
 
-            // get all the existing proto slots
-            let existing: Vec<usize> = self.protos.iter().map(|p| p.slot_idx).collect();
-            // then filter out all the existing slots to get empty slots
-            let empty_slots: Vec<usize> = (0..PROTO_MAX_SLOTS)
-                .filter(|idx| !existing.contains(idx))
-                .collect();
+        let existing: Vec<usize> = self.protos.iter().map(|p| p.slot_idx).collect();
+        let empty_slots: Vec<usize> = (0..PROTO_MAX_SLOTS)
+            .filter(|idx| !existing.contains(idx))
+            .collect();
 
-            if !empty_slots.is_empty() {
-                let rand_idx = rand::gen_range(0, empty_slots.len());
-                let slot_idx = empty_slots[rand_idx];
-                let angle = (slot_idx as f32) * std::f32::consts::PI / (PROTO_MAX_SLOTS - 1) as f32;
-                let spawn_pos =
-                    self.boss.position + Vec2::new(angle.cos(), angle.sin()) * PROTO_SPAWN_OFFSET_X;
-                self.protos.push(Proto::new(spawn_pos, slot_idx));
-            }
+        if !empty_slots.is_empty() {
+            let rand_idx = rand::gen_range(0, empty_slots.len());
+            let slot_idx = empty_slots[rand_idx];
+            let angle = (slot_idx as f32) * std::f32::consts::PI / (PROTO_MAX_SLOTS - 1) as f32;
+            let spawn_pos =
+                self.boss.position + Vec2::new(angle.cos(), angle.sin()) * PROTO_SPAWN_OFFSET_X;
+            self.protos.push(Proto::new(spawn_pos, slot_idx));
         }
     }
 

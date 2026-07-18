@@ -151,7 +151,7 @@ impl World {
         // this is for the case where some button overlaps with the egui window
         let mut egui_wants_pointer = false;
         if self.dev_ui {
-            egui_wants_pointer = dev_ui::update(&self.state, &self.arena, &mut self.events);
+            egui_wants_pointer = dev_ui::update(&self.state, &mut self.arena, &mut self.events);
         }
         if egui_wants_pointer {
             input.primary_pressed = false;
