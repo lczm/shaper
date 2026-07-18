@@ -196,8 +196,10 @@ impl Proto {
         }
     }
 
-    pub fn take_damage(&mut self, damage: i32) {
+    pub fn take_damage(&mut self, damage: i32) -> bool {
+        let was_alive = self.current_health > 0;
         self.current_health = (self.current_health - damage).max(0);
+        was_alive && self.current_health == 0
     }
 
     pub fn is_invulnerable(&self) -> bool {

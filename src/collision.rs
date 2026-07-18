@@ -153,7 +153,9 @@ pub fn handle_collisions(
                     if hit_boss {
                         boss_damage += total_damage;
                     } else if let Some(idx) = hit_proto_idx {
-                        protos[idx].take_damage(total_damage);
+                        if protos[idx].take_damage(total_damage) {
+                            events.push(GameEvent::LevelUp);
+                        }
                     }
 
                     for hit in secondary_hits {
@@ -182,7 +184,9 @@ pub fn handle_collisions(
                             if target == 0 {
                                 boss_damage += hit.damage;
                             } else {
-                                protos[target - 1].take_damage(hit.damage);
+                                if protos[target - 1].take_damage(hit.damage) {
+                                    events.push(GameEvent::LevelUp);
+                                }
                             }
                         }
 
