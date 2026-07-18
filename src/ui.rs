@@ -7,6 +7,7 @@ use crate::constants::{
     HEALTH_BAR_MARKER_COLOR, HEALTH_BAR_MARKER_THICKNESS, HEALTH_BAR_TOP_MARGIN, HEIGHT,
     PLAYER_FIRE_INTERVAL, UI_TEXT_COLOR, WIDTH,
 };
+use crate::player;
 use crate::state::GameState;
 
 pub struct Ui;
@@ -70,6 +71,11 @@ impl Ui {
         y += 24.0 * sy;
         draw_line(x, y, x + 500.0 * sx, y, 2.0 * sx, ARENA_BORDER_COLOR);
 
+        // calculate fire rate
+        let fire_rate = 1.0 / PLAYER_FIRE_INTERVAL;
+        // calculate player damage (from player potential damage), but scaled with fire rate
+        let player_damage = player_damage * fire_rate as i32;
+
         // weapon stats
         y += 36.0 * sy;
         draw_text(
@@ -81,7 +87,6 @@ impl Ui {
         );
 
         y += 40.0 * sy;
-        let fire_rate = 1.0 / PLAYER_FIRE_INTERVAL;
         draw_text(
             format!("Fire rate : {fire_rate:.1}/s"),
             x,
