@@ -10,6 +10,7 @@ use crate::dev_ui;
 use crate::gfx::{Post, Shaders, Shake};
 use crate::input::Input;
 use crate::level_window::LevelWindow;
+use crate::modifiers::Modifier;
 use crate::state::GameState;
 use crate::ui::Ui;
 
@@ -160,15 +161,26 @@ impl World {
         // the game stays frozen until the player picks a card
         if let Some(window) = self.level_window.as_mut() {
             if let Some(index) = window.update(self.dt, input.screen_mouse, input.primary_pressed) {
-                // add the selected modifier to the player's recipe
                 let modifier = window.selected_modifier(index);
-                self.arena
-                    .player_mut()
-                    .projectile_recipe
-                    .add_modifier(modifier.clone());
-
-                // remove the selected modifier from the pool in modifiers_generator
-                self.state.modifiers_generator.remove_modifier(&modifier);
+                match modifier {
+                    Modifier::DamageBoost(damage_boost) => {
+                        self.arena.player_mut().add_damage(damage_boost);
+                    }
+                    Modifier::FireRateBoost(fire_rate_boost) => {
+                        self.arena.player_mut().increase_fire_rate(fire_rate_boost);
+                    }
+                    Modifier::BombBoost => {
+                        self.state.bombs += 1;
+                        self.arena.player_mut().bomb_radius *= 1.20;
+                    }
+                    _ => {
+                        self.arena
+                            .player_mut()
+                            .projectile_recipe
+                            .add_modifier(modifier.clone());
+                        self.state.modifiers_generator.remove_modifier(&modifier);
+                    }
+                }
 
                 self.level_window = None;
             }
@@ -239,7 +251,10 @@ impl World {
                     self.game_over_banner = GAME_OVER_BANNER_DURATION;
                 }
                 GameEvent::LevelUp => {
-                    let options = self.state.modifiers_generator.generate_options();
+                    let options = self
+                        .state
+                        .modifiers_generator
+                        .generate_options(self.arena.player().damage());
                     self.level_window = Some(LevelWindow::new(options));
                 }
                 // all visual effects go through here, then it pushes some activevisual effect to the arena
@@ -331,6 +346,7 @@ impl World {
             &self.state,
             self.arena.bounds(),
             self.arena.player_damage(),
+            self.arena.player().fire_interval(),
             self.arena.boss_health(),
             self.arena.boss_displayed_health(),
             self.arena.boss_invulnerable(),

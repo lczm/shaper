@@ -113,7 +113,7 @@ impl Arena {
 
     // set bomb at position (player center) and grant iframes
     pub fn detonate_bomb(&mut self, position: Vec2) {
-        self.bomb = Some(Bomb::new(position));
+        self.bomb = Some(Bomb::new(position, self.player.bomb_radius));
         self.player.grant_invulnerability(BOMB_DURATION);
     }
 

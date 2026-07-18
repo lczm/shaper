@@ -2,20 +2,21 @@ use macroquad::prelude::*;
 
 use crate::collision::{circle_circle_overlap, segment_circle_overlap};
 use crate::constants::{
-    BEAM_WIDTH, BOMB_BORDER_COLOR, BOMB_BORDER_THICKNESS, BOMB_DURATION, BOMB_RADIUS,
-    PROJECTILE_RADIUS,
+    BEAM_WIDTH, BOMB_BORDER_COLOR, BOMB_BORDER_THICKNESS, BOMB_DURATION, PROJECTILE_RADIUS,
 };
 use crate::projectile::{Projectile, ProjectileKind};
 
 pub struct Bomb {
     center: Vec2,
+    radius: f32,
     elapsed: f32,
 }
 
 impl Bomb {
-    pub fn new(center: Vec2) -> Self {
+    pub fn new(center: Vec2, radius: f32) -> Self {
         Bomb {
             center,
+            radius,
             elapsed: 0.0,
         }
     }
@@ -30,7 +31,7 @@ impl Bomb {
         match projectile {
             Projectile::Bullet(b) => match b.kind {
                 ProjectileKind::Boss => {
-                    circle_circle_overlap(b.position, PROJECTILE_RADIUS, self.center, BOMB_RADIUS)
+                    circle_circle_overlap(b.position, PROJECTILE_RADIUS, self.center, self.radius)
                 }
                 ProjectileKind::Player { .. } => false,
             },
@@ -39,7 +40,7 @@ impl Bomb {
                 beam.end,
                 BEAM_WIDTH / 2.0,
                 self.center,
-                BOMB_RADIUS,
+                self.radius,
             ),
         }
     }
@@ -54,7 +55,7 @@ impl Bomb {
         draw_circle_lines(
             self.center.x,
             self.center.y,
-            BOMB_RADIUS,
+            self.radius,
             BOMB_BORDER_THICKNESS,
             color,
         );

@@ -5,7 +5,7 @@ use crate::constants::{
     ARENA_BORDER_COLOR, BANNER_FONT_SIZE, HEALTH_BAR_BG_COLOR, HEALTH_BAR_CHIP_COLOR,
     HEALTH_BAR_FILL_COLOR, HEALTH_BAR_HEIGHT, HEALTH_BAR_INVULN_FILL_COLOR,
     HEALTH_BAR_MARKER_COLOR, HEALTH_BAR_MARKER_THICKNESS, HEALTH_BAR_TOP_MARGIN, HEIGHT,
-    PLAYER_FIRE_INTERVAL, UI_TEXT_COLOR, WIDTH,
+    UI_TEXT_COLOR, WIDTH,
 };
 use crate::modifiers::Modifier;
 use crate::state::GameState;
@@ -23,6 +23,7 @@ impl Ui {
         state: &GameState,
         bounds: Rect,
         player_damage: i32,
+        player_fire_interval: f32,
         boss_health: (i32, i32),
         boss_displayed: f32,
         boss_invulnerable: bool,
@@ -73,7 +74,7 @@ impl Ui {
         draw_line(x, y, x + 500.0 * sx, y, 2.0 * sx, ARENA_BORDER_COLOR);
 
         // calculate fire rate
-        let fire_rate = 1.0 / PLAYER_FIRE_INTERVAL;
+        let fire_rate = 1.0 / player_fire_interval;
         // calculate player damage (from player potential damage), but scaled with fire rate
         let player_damage = player_damage * fire_rate as i32;
 
@@ -117,8 +118,11 @@ impl Ui {
 
             let mut modifiers_to_draw = Vec::new();
             for &modifier in active_modifiers.iter().rev() {
-                let desc_lines =
-                    crate::utils::wrap_text(modifier.description(), max_desc_width, desc_font_size);
+                let desc_lines = crate::utils::wrap_text(
+                    &modifier.description(),
+                    max_desc_width,
+                    desc_font_size,
+                );
                 let desc_height = desc_lines.len() as f32 * 18.0 * sy;
                 let needed_height = 34.0 * sy + desc_height;
 
@@ -134,7 +138,7 @@ impl Ui {
             for (modifier, desc_lines) in modifiers_to_draw {
                 y += 28.0 * sy;
                 // draw name
-                draw_text(modifier.name(), x, y, title_font_size, UI_TEXT_COLOR);
+                draw_text(&modifier.name(), x, y, title_font_size, UI_TEXT_COLOR);
                 // draw description
                 for line in desc_lines {
                     y += 18.0 * sy;

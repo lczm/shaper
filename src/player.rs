@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
 
 use crate::constants::{
-    ARENA_BORDER_THICKNESS, HIT_INVULN_DURATION, PHASE_DISTANCE, PHASE_DURATION,
+    ARENA_BORDER_THICKNESS, BOMB_RADIUS, HIT_INVULN_DURATION, PHASE_DISTANCE, PHASE_DURATION,
     PHASE_GHOST_OPACITY, PHASE_MIN_OPACITY, PHASE_TRAIL_LENGTH, PLAYER_CIRCLE_RADIUS, PLAYER_COLOR,
     PLAYER_DEV_BOMBS, PLAYER_DEV_CHEAT_FIRE_INTERVAL, PLAYER_FIRE_INTERVAL, PLAYER_PHASING_COLOR,
     PLAYER_PROJECTILE_COLOR, PLAYER_PROJECTILE_SPEED, PLAYER_SPEED, PLAYER_TRAIL_COLOR,
@@ -35,6 +35,7 @@ pub struct Player {
     damage: i32,
     // apply modifiers on each bullet when projectile is spawned
     pub projectile_recipe: ProjectileRecipe,
+    pub bomb_radius: f32,
 }
 
 impl Player {
@@ -49,11 +50,24 @@ impl Player {
             hit_cooldown: 0.0,
             damage: 5,
             projectile_recipe: ProjectileRecipe::new(),
+            bomb_radius: BOMB_RADIUS,
         }
     }
 
     pub fn damage(&self) -> i32 {
         self.damage
+    }
+
+    pub fn fire_interval(&self) -> f32 {
+        self.fire_interval
+    }
+
+    pub fn add_damage(&mut self, damage_boost: i32) {
+        self.damage += damage_boost;
+    }
+
+    pub fn increase_fire_rate(&mut self, fire_rate_boost: u32) {
+        self.fire_interval /= 1.0 + (fire_rate_boost as f32) / 100.0;
     }
 
     pub fn potential_damage(&self) -> i32 {

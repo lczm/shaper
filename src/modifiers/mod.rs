@@ -73,6 +73,11 @@ pub enum Modifier {
     Lightning,
     Dna,
     TripleShot,
+
+    // stat upgrades
+    DamageBoost(i32),
+    FireRateBoost(u32),
+    BombBoost,
 }
 
 pub mod homing {
@@ -256,12 +261,13 @@ impl Modifier {
         circle: &mut crate::shape::Circle,
     ) {
         match self {
-            Modifier::None => {},
+            Modifier::None => {}
             Modifier::Homing => homing::on_spawn(state, velocity, circle),
             Modifier::Bouncing => bouncing::on_spawn(state, circle),
             Modifier::Lightning => lightning::on_spawn(circle),
             Modifier::Dna => dna::on_spawn(state, circle),
-            Modifier::TripleShot => {},
+            Modifier::TripleShot => {}
+            Modifier::DamageBoost(_) | Modifier::FireRateBoost(_) | Modifier::BombBoost => {}
         }
     }
 
@@ -281,6 +287,7 @@ impl Modifier {
             Modifier::Lightning => {}
             Modifier::Dna => dna::on_update(state, position, velocity, dt),
             Modifier::TripleShot => {}
+            Modifier::DamageBoost(_) | Modifier::FireRateBoost(_) | Modifier::BombBoost => {}
         }
     }
 
@@ -299,35 +306,50 @@ impl Modifier {
             Modifier::Lightning => lightning::on_hit(kind, context),
             Modifier::Dna => HitResult::default(),
             Modifier::TripleShot => HitResult::default(),
+            Modifier::DamageBoost(_) | Modifier::FireRateBoost(_) | Modifier::BombBoost => {
+                HitResult::default()
+            }
         }
     }
 
-    pub fn name(&self) -> &str {
+    pub fn name(&self) -> String {
         match self {
-            Modifier::None => "Placeholder",
-            Modifier::Homing => "Homing",
-            Modifier::Bouncing => "Bouncing",
-            Modifier::Lightning => "Chain Lightning",
-            Modifier::Dna => "DNA",
-            Modifier::TripleShot => "Triple Shot",
+            Modifier::None => "Placeholder".to_string(),
+            Modifier::Homing => "Homing".to_string(),
+            Modifier::Bouncing => "Bouncing".to_string(),
+            Modifier::Lightning => "Chain Lightning".to_string(),
+            Modifier::Dna => "DNA".to_string(),
+            Modifier::TripleShot => "Triple Shot".to_string(),
+            Modifier::DamageBoost(_) => "Damage Boost".to_string(),
+            Modifier::FireRateBoost(_) => "Fire Rate Boost".to_string(),
+            Modifier::BombBoost => "Bomb Boost".to_string(),
         }
     }
 
-    pub fn description(&self) -> &str {
+    pub fn description(&self) -> String {
         match self {
-            Modifier::None => "No effect.",
-            Modifier::Homing => "Projectiles steer toward the nearest enemy.",
+            Modifier::None => "No effect.".to_string(),
+            Modifier::Homing => "Projectiles steer toward the nearest enemy.".to_string(),
             Modifier::Bouncing => {
-                "Projectiles can bounce once off the arena bounds. When it bounces, it is a little random!"
+                "Projectiles can bounce once off the arena bounds. When it bounces, it is a little random!".to_string()
             }
             Modifier::Lightning => {
-                "Projectiles release chain lightning on hit, dealing 30% damage to up to 2 nearby targets."
+                "Projectiles release chain lightning on hit, dealing 30% damage to up to 2 nearby targets.".to_string()
             }
             Modifier::Dna => {
-                "Fires 2 projectiles in opposite sine waves, forming a double helix pattern."
+                "Fires 2 projectiles in opposite sine waves, forming a double helix pattern.".to_string()
             }
             Modifier::TripleShot => {
-                "Triples the number of projectiles fired per shot."
+                "Triples the number of projectiles fired per shot.".to_string()
+            }
+            Modifier::DamageBoost(damage_boost) => {
+                format!("Increases flat damage by +{damage_boost}.")
+            }
+            Modifier::FireRateBoost(fire_rate_boost) => {
+                format!("Increases fire rate by +{fire_rate_boost}%.")
+            }
+            Modifier::BombBoost => {
+                "Adds +1 Bomb and increases bomb radius by 20%.".to_string()
             }
         }
     }
