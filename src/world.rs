@@ -12,6 +12,7 @@ use crate::input::Input;
 use crate::level_window::LevelWindow;
 use crate::modifiers::Modifier;
 use crate::state::GameState;
+use crate::startup_window::StartupWindow;
 use crate::ui::Ui;
 
 #[derive(Clone, Copy)]
@@ -82,6 +83,8 @@ pub struct World {
     // which boss HP-fraction thresholds have already triggered a level-up this
     // fight, so each one only fires once. cleared on game reset
     level_thresholds_opened: Vec<bool>,
+    // startup controls guide window, shown once at the start of the game
+    startup_window: Option<StartupWindow>,
 
     // drained every frame
     events: Vec<GameEvent>,
@@ -112,6 +115,7 @@ impl World {
             level_window: None,
             // to track that the level up window is only shown once per threshold
             level_thresholds_opened: vec![false; BOSS_SPECIAL_HP_THRESHOLDS.len()],
+            startup_window: Some(StartupWindow::new()),
             events: Vec::new(),
         }
     }
@@ -155,6 +159,15 @@ impl World {
         }
         if egui_wants_pointer {
             input.primary_pressed = false;
+        }
+
+        // if a startup controls window is active, it gets exclusive control;
+        // the game stays frozen until the player clicks start
+        if let Some(window) = self.startup_window.as_mut() {
+            if window.update(self.dt, input.screen_mouse, input.primary_pressed) {
+                self.startup_window = None;
+            }
+            return;
         }
 
         // if a level-up window is active, it gets exclusive control;
@@ -361,6 +374,10 @@ impl World {
         // dev ui. it also resets to the default camera in case egui left its
         // own pipeline active
         if let Some(window) = &self.level_window {
+            window.draw();
+        }
+
+        if let Some(window) = &self.startup_window {
             window.draw();
         }
 

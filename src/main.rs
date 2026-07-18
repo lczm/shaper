@@ -14,6 +14,7 @@ mod proto;
 mod proto_beam;
 mod recipe;
 mod shape;
+mod startup_window;
 mod state;
 mod ui;
 mod utils;
