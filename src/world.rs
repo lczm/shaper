@@ -142,6 +142,7 @@ impl World {
         // gather input here since World owns the camera (mouse -> world)
         let mut input = Input::gather(&self.camera);
 
+        #[cfg(debug_assertions)]
         if self.level_window.is_none() && input.space_pressed {
             self.dev_ui = !self.dev_ui;
         }
