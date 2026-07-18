@@ -7,7 +7,6 @@ use crate::constants::{
     PLAYER_PROJECTILE_COLOR, PLAYER_PROJECTILE_SPEED, PLAYER_SPEED, PLAYER_TRAIL_COLOR,
 };
 use crate::input::Input;
-use crate::modifiers::Modifier;
 use crate::projectile::{BulletProjectile, Projectile, ProjectileKind};
 use crate::recipe::ProjectileRecipe;
 use crate::shape::Circle;
@@ -148,8 +147,7 @@ impl Player {
             // keep the overshoot remainder so cadence doesnt drift
             self.fire_timer += self.fire_interval;
 
-            let has_dna = self.projectile_recipe.modifiers.contains(&Modifier::Dna);
-            let spawns = if has_dna { 2 } else { 1 };
+            let spawns = self.projectile_recipe.spawn_count();
 
             for i in 0..spawns {
                 // continuously spawn new bullet projectile from the player position upwards

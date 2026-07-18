@@ -19,6 +19,7 @@ impl ModifiersGenerator {
                 Modifier::Bouncing,
                 Modifier::Lightning,
                 Modifier::Dna,
+                Modifier::TripleShot,
             ],
         }
     }

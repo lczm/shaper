@@ -72,6 +72,7 @@ pub enum Modifier {
     Bouncing,
     Lightning,
     Dna,
+    TripleShot,
 }
 
 pub mod homing {
@@ -255,11 +256,12 @@ impl Modifier {
         circle: &mut crate::shape::Circle,
     ) {
         match self {
-            Modifier::None => {}
+            Modifier::None => {},
             Modifier::Homing => homing::on_spawn(state, velocity, circle),
             Modifier::Bouncing => bouncing::on_spawn(state, circle),
             Modifier::Lightning => lightning::on_spawn(circle),
             Modifier::Dna => dna::on_spawn(state, circle),
+            Modifier::TripleShot => {},
         }
     }
 
@@ -278,6 +280,7 @@ impl Modifier {
             Modifier::Bouncing => bouncing::on_update(state, position, velocity, circle, ctx),
             Modifier::Lightning => {}
             Modifier::Dna => dna::on_update(state, position, velocity, dt),
+            Modifier::TripleShot => {}
         }
     }
 
@@ -295,6 +298,7 @@ impl Modifier {
             Modifier::Bouncing => HitResult::default(),
             Modifier::Lightning => lightning::on_hit(kind, context),
             Modifier::Dna => HitResult::default(),
+            Modifier::TripleShot => HitResult::default(),
         }
     }
 
@@ -305,6 +309,7 @@ impl Modifier {
             Modifier::Bouncing => "Bouncing",
             Modifier::Lightning => "Chain Lightning",
             Modifier::Dna => "DNA",
+            Modifier::TripleShot => "Triple Shot",
         }
     }
 
@@ -321,6 +326,9 @@ impl Modifier {
             Modifier::Dna => {
                 "Fires 2 projectiles in opposite sine waves, forming a double helix pattern."
             }
+            Modifier::TripleShot => {
+                "Triples the number of projectiles fired per shot."
+            }
         }
     }
 
@@ -332,6 +340,7 @@ impl Modifier {
                 (bonus, 1)
             }
             Modifier::Dna => (0, 2),
+            Modifier::TripleShot => (0, 3),
             _ => (0, 1),
         }
     }

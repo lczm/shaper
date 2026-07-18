@@ -201,3 +201,5 @@ pub const DNA_PROJECTILE_COLOR_1: Color = Color::new(0.18, 0.80, 1.0, 1.0);
 // pink ish
 pub const DNA_PROJECTILE_COLOR_2: Color = Color::new(1.0, 0.18, 0.70, 1.0);
 
+// when triple shot it should be \ | / ish so 45 degrees on left and right
+pub const TRIPLE_SHOT_SPREAD_ANGLE: f32 = std::f32::consts::FRAC_PI_4;
