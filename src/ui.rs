@@ -116,7 +116,7 @@ impl Ui {
             let indent = 20.0 * sx;
 
             let mut modifiers_to_draw = Vec::new();
-            for &modifier in active_modifiers.iter() {
+            for &modifier in active_modifiers.iter().rev() {
                 let desc_lines =
                     crate::utils::wrap_text(modifier.description(), max_desc_width, desc_font_size);
                 let desc_height = desc_lines.len() as f32 * 18.0 * sy;
@@ -129,6 +129,7 @@ impl Ui {
                     break;
                 }
             }
+            modifiers_to_draw.reverse();
 
             for (modifier, desc_lines) in modifiers_to_draw {
                 y += 28.0 * sy;
