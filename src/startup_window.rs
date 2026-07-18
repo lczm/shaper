@@ -12,7 +12,7 @@ impl StartupWindow {
         }
     }
 
-    // returns true if the user clicks the "START" button or presses Space/Enter to start
+    // returns true if the user clicks the "START" button or presses Enter to start
     pub fn update(&mut self, _dt: f32, mouse: Vec2, primary_pressed: bool) -> bool {
         let sw = screen_width();
         let sh = screen_height();
@@ -30,7 +30,6 @@ impl StartupWindow {
         self.button_hovered = point_in_rect(mouse, btn_rect);
 
         if (primary_pressed && self.button_hovered)
-            || is_key_pressed(KeyCode::Space)
             || is_key_pressed(KeyCode::Enter)
         {
             return true;
