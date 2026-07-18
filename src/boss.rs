@@ -329,7 +329,7 @@ impl Boss {
     fn update_transition_50(&mut self, dt: f32, mut trans: Transition50State) {
         trans.elapsed += dt;
         self.rotation += BOSS_IDLE_ROTATION_SPEED * dt;
-        if trans.elapsed >= 1.0 {
+        if trans.elapsed >= BOSS_TRANSITION_75_DURATION {
             self.state = BossState::Idle(IdleState::new());
         } else {
             self.state = BossState::Transition50(trans);
@@ -339,7 +339,7 @@ impl Boss {
     fn update_transition_25(&mut self, dt: f32, mut trans: Transition25State) {
         trans.elapsed += dt;
         self.rotation += BOSS_IDLE_ROTATION_SPEED * dt;
-        if trans.elapsed >= 1.0 {
+        if trans.elapsed >= BOSS_TRANSITION_75_DURATION {
             self.state = BossState::Idle(IdleState::new());
         } else {
             self.state = BossState::Transition25(trans);
@@ -587,8 +587,11 @@ impl Boss {
         )
     }
 
-    pub fn is_in_transition_75(&self) -> bool {
-        matches!(self.state, BossState::Transition75(_))
+    pub fn is_in_transition(&self) -> bool {
+        matches!(
+            self.state,
+            BossState::Transition75(_) | BossState::Transition50(_) | BossState::Transition25(_)
+        )
     }
 
     // chip drains smoothly towards current health

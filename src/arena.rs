@@ -169,8 +169,7 @@ impl Arena {
         self.protos.retain(|proto| !proto.is_fully_dead());
 
         // manage spawn and death of proto_beam pairs
-        // todo : maybe for 50% and 25% as well
-        let transition_active = self.boss.is_in_transition_75();
+        let transition_active = self.boss.is_in_transition();
         if transition_active {
             if self.proto_beams.is_empty() {
                 // spawn the left and right proto beams, and a beam projectile between them
