@@ -5,12 +5,14 @@ use crate::boss::Boss;
 use crate::collision::handle_collisions;
 use crate::constants::{
     ARENA_BORDER_COLOR, ARENA_BORDER_THICKNESS, ARENA_MARGIN_HEIGHT, ARENA_MARGIN_WIDTH,
-    BACKGROUND, BOMB_DURATION, FRAME_MASK_PAD, HEIGHT,
+    BACKGROUND, BOMB_DURATION, FRAME_MASK_PAD, HEIGHT, PROTO_MAX_SLOTS, PROTO_SPAWN_MAX_INTERVAL,
+    PROTO_SPAWN_MIN_INTERVAL, PROTO_SPAWN_OFFSET_X,
 };
 use crate::gfx::Shaders;
 use crate::input::Input;
 use crate::modifiers::ModifierContext;
 use crate::player::Player;
+use crate::proto::Proto;
 use crate::state::GameState;
 use crate::world::GameEvent;
 
@@ -19,6 +21,8 @@ pub struct Arena {
     bounds: Rect,
     player: Player,
     boss: Boss,
+    pub protos: Vec<Proto>,
+    proto_spawn_timer: f32,
     // active clearing blast, if one is currently going off
     bomb: Option<Bomb>,
 }
@@ -31,11 +35,24 @@ impl Arena {
         let bounds = Rect::new(ARENA_MARGIN_WIDTH, ARENA_MARGIN_HEIGHT, width, height);
 
         let center_x = bounds.x + bounds.w / 2.0;
+        let boss_pos = vec2(center_x, bounds.y + bounds.h / 5.0);
+
+        // Spawn left proto at slot 4 (angle PI, left) and right proto at slot 0 (angle 0, right)
+        let left_proto = Proto::new(
+            boss_pos - vec2(PROTO_SPAWN_OFFSET_X, 0.0),
+            PROTO_MAX_SLOTS - 1,
+        );
+        let right_proto = Proto::new(boss_pos + vec2(PROTO_SPAWN_OFFSET_X, 0.0), 0);
+
+        let proto_spawn_timer = rand::gen_range(PROTO_SPAWN_MIN_INTERVAL, PROTO_SPAWN_MAX_INTERVAL);
+
         Arena {
             bounds,
             // player near the bottom-center, boss near the top-center
             player: Player::new(vec2(center_x, bounds.y + bounds.h * 4.0 / 5.0)),
-            boss: Boss::new(vec2(center_x, bounds.y + bounds.h / 5.0)),
+            boss: Boss::new(boss_pos),
+            protos: vec![left_proto, right_proto],
+            proto_spawn_timer,
             bomb: None,
         }
     }
@@ -77,7 +94,12 @@ impl Arena {
             count += 1;
             positions.push(self.boss.position);
         }
-        // todo : add more enemies here and increment
+        for proto in &self.protos {
+            if !proto.is_dead() {
+                count += 1;
+                positions.push(proto.position);
+            }
+        }
         (count, positions)
     }
 
@@ -116,6 +138,23 @@ impl Arena {
         self.boss
             .update(dt, state, self.bounds, self.player.position, events);
 
+        // when boss dies, kill of all the protos
+        if self.boss.is_dead() {
+            for proto in &mut self.protos {
+                proto.kill();
+            }
+        }
+
+        // update any protos that exist
+        for proto in &mut self.protos {
+            proto.update(dt, state, self.player.position);
+        }
+        // unless its dead
+        self.protos.retain(|proto| !proto.is_fully_dead());
+
+        // every nwo and then spawn soem protos when the boss is alive
+        self.spawn_proto_periodically(dt);
+
         let (_, enemy_positions) = self.alive_enemy_count();
 
         let modifier_context = ModifierContext {
@@ -146,7 +185,44 @@ impl Arena {
         }
 
         // handle collisions after all movement is done
-        handle_collisions(state, &self.player, &self.boss, self.bounds, events);
+        handle_collisions(
+            state,
+            &self.player,
+            &mut self.boss,
+            &mut self.protos,
+            self.bounds,
+            events,
+        );
+    }
+
+    // when the boss isnt dead, spawn some protos at random intervals
+    fn spawn_proto_periodically(&mut self, dt: f32) {
+        if self.boss.is_dead() {
+            return;
+        }
+
+        self.proto_spawn_timer -= dt;
+        if self.proto_spawn_timer <= 0.0 {
+            // reset the timer
+            self.proto_spawn_timer =
+                rand::gen_range(PROTO_SPAWN_MIN_INTERVAL, PROTO_SPAWN_MAX_INTERVAL);
+
+            // get all the existing proto slots
+            let existing: Vec<usize> = self.protos.iter().map(|p| p.slot_idx).collect();
+            // then filter out all the existing slots to get empty slots
+            let empty_slots: Vec<usize> = (0..PROTO_MAX_SLOTS)
+                .filter(|idx| !existing.contains(idx))
+                .collect();
+
+            if !empty_slots.is_empty() {
+                let rand_idx = rand::gen_range(0, empty_slots.len());
+                let slot_idx = empty_slots[rand_idx];
+                let angle = (slot_idx as f32) * std::f32::consts::PI / (PROTO_MAX_SLOTS - 1) as f32;
+                let spawn_pos =
+                    self.boss.position + Vec2::new(angle.cos(), angle.sin()) * PROTO_SPAWN_OFFSET_X;
+                self.protos.push(Proto::new(spawn_pos, slot_idx));
+            }
+        }
     }
 
     pub fn draw(&self, state: &GameState, shaders: &Shaders) {
@@ -160,6 +236,11 @@ impl Arena {
         self.draw_frame_mask();
 
         self.player.draw();
+
+        for proto in &self.protos {
+            proto.draw();
+        }
+
         self.boss.draw();
 
         // draw active visual effects on top of the boss

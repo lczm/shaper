@@ -1,10 +1,11 @@
 use macroquad::prelude::*;
 
 use crate::boss::Boss;
-use crate::constants::{BEAM_WIDTH, PROJECTILE_RADIUS};
+use crate::constants::{BEAM_WIDTH, PROJECTILE_RADIUS, PROTO_RADIUS};
 use crate::modifiers::{ModifierContext, SecondaryHitKind};
 use crate::player::Player;
 use crate::projectile::{Projectile, ProjectileKind};
+use crate::proto::Proto;
 use crate::state::GameState;
 use crate::world::GameEvent;
 
@@ -44,7 +45,8 @@ pub fn segment_circle_overlap(a: Vec2, b: Vec2, half_width: f32, c: Vec2, r: f32
 pub fn handle_collisions(
     state: &mut GameState,
     player: &Player,
-    boss: &Boss,
+    boss: &mut Boss,
+    protos: &mut [Proto],
     bounds: Rect,
     events: &mut Vec<GameEvent>,
 ) {
@@ -81,9 +83,11 @@ pub fn handle_collisions(
                     true
                 }
             }
-            // player bullet hits the boss: deal its damage, run modifier hooks, and
+            // player bullet hits the (boss or protos) / enemies
+            // deal its damage, run modifier hooks, and
             // destroy unless a modifier says otherwise
             ProjectileKind::Player { damage } => {
+                let mut hit_boss = false;
                 if !boss_invulnerable
                     && circle_box_overlap(
                         b.position,
@@ -93,12 +97,39 @@ pub fn handle_collisions(
                         boss_rot,
                     )
                 {
+                    hit_boss = true;
+                }
+
+                let mut hit_proto_idx = None;
+                for (idx, proto) in protos.iter().enumerate() {
+                    if !proto.is_invulnerable()
+                        && !proto.is_dead()
+                        && circle_circle_overlap(
+                            b.position,
+                            PROJECTILE_RADIUS,
+                            proto.position,
+                            PROTO_RADIUS,
+                        )
+                    {
+                        hit_proto_idx = Some(idx);
+                        break;
+                    }
+                }
+
+                if hit_boss || hit_proto_idx.is_some() {
                     let mut should_destroy = true;
                     let mut bonus = 0;
 
+                    let mut enemy_positions = vec![boss_pos];
+                    for proto in protos.iter() {
+                        if !proto.is_dead() {
+                            enemy_positions.push(proto.position);
+                        }
+                    }
+
                     let ctx = ModifierContext {
                         arena_bounds: bounds,
-                        enemy_positions: vec![boss_pos],
+                        enemy_positions,
                         player_position: player_pos,
                     };
 
@@ -118,10 +149,43 @@ pub fn handle_collisions(
                         secondary_hits.append(&mut result.secondary_hits);
                     }
 
-                    boss_damage += damage + bonus;
+                    let total_damage = damage + bonus;
+                    if hit_boss {
+                        boss_damage += total_damage;
+                    } else if let Some(idx) = hit_proto_idx {
+                        protos[idx].take_damage(total_damage);
+                    }
 
                     for hit in secondary_hits {
-                        boss_damage += hit.damage;
+                        let mut closest_idx = None;
+                        let mut closest_dist = f32::INFINITY;
+
+                        // check boss
+                        let boss_dist = hit.position.distance_squared(boss_pos);
+                        if !boss_invulnerable && boss_dist < closest_dist {
+                            closest_dist = boss_dist;
+                            closest_idx = Some(0);
+                        }
+
+                        // check protos
+                        for (p_idx, proto) in protos.iter().enumerate() {
+                            if !proto.is_invulnerable() && !proto.is_dead() {
+                                let d = hit.position.distance_squared(proto.position);
+                                if d < closest_dist {
+                                    closest_dist = d;
+                                    closest_idx = Some(p_idx + 1);
+                                }
+                            }
+                        }
+
+                        if let Some(target) = closest_idx {
+                            if target == 0 {
+                                boss_damage += hit.damage;
+                            } else {
+                                protos[target - 1].take_damage(hit.damage);
+                            }
+                        }
+
                         let visual_effect = match hit.kind {
                             SecondaryHitKind::Lightning => crate::world::VisualEffect::Lightning {
                                 start: b.position,

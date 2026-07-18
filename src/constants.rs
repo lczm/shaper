@@ -203,3 +203,26 @@ pub const DNA_PROJECTILE_COLOR_2: Color = Color::new(1.0, 0.18, 0.70, 1.0);
 
 // when triple shot it should be \ | / ish so 45 degrees on left and right
 pub const TRIPLE_SHOT_SPREAD_ANGLE: f32 = std::f32::consts::FRAC_PI_4;
+
+// proto (subordinate) enemy constants
+pub const PROTO_HEALTH: i32 = 80;
+pub const PROTO_RADIUS: f32 = 24.0;
+pub const PROTO_COLOR: Color = Color::new(0.12, 0.53, 0.53, 1.0); // dark green-blue
+pub const PROTO_PROJECTILE_COLOR: Color = Color::new(0.30, 0.85, 0.70, 1.0); // bright green-blue
+pub const PROTO_PROJECTILE_SPEED: f32 = 140.0;
+pub const PROTO_SPAWN_OFFSET_X: f32 = 140.0;
+pub const PROTO_CLUSTER_SPREAD: f32 = 25.0 * std::f32::consts::PI / 180.0;
+pub const PROTO_BULLET_SPREAD: f32 = 6.0 * std::f32::consts::PI / 180.0;
+pub const PROTO_MAX_SLOTS: usize = 5;
+pub const PROTO_SPAWN_MIN_INTERVAL: f32 = 3.0;
+pub const PROTO_SPAWN_MAX_INTERVAL: f32 = 5.0;
+pub const PROTO_IDLE_ROTATION_SPEED: f32 = 0.4;
+pub const PROTO_SPINUP_PEAK_SPEED: f32 = 10.0;
+pub const PROTO_SPINUP_RAMP_UP: f32 = 0.6;
+pub const PROTO_SPINUP_HOLD: f32 = 0.8;
+pub const PROTO_SPINUP_RAMP_DOWN: f32 = 1.0;
+pub const PROTO_SPINUP_DURATION: f32 =
+    PROTO_SPINUP_RAMP_UP + PROTO_SPINUP_HOLD + PROTO_SPINUP_RAMP_DOWN;
+pub const PROTO_DEATH_INITIAL_DROP_SPEED: f32 = 30.0;
+pub const PROTO_DEATH_GRAVITY: f32 = 1200.0;
+pub const PROTO_DEATH_SPIN_HOLD: f32 = 5.0;

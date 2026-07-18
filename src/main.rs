@@ -9,6 +9,7 @@ mod input;
 mod level_window;
 mod modifiers;
 mod player;
+mod proto;
 mod projectile;
 mod recipe;
 mod shape;
