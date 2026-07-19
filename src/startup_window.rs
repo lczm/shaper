@@ -99,8 +99,12 @@ impl StartupWindow {
         let start_y = win_y + 200.0;
 
         let controls = [
-            ("MOVEMENT", "Arrow Keys", "Move player around the arena"),
-            ("BOMB", "Z Key", "Clear all projectiles within bomb radius"),
+            (
+                "MOVEMENT",
+                "Arrow Keys / WASD",
+                "Move player around the arena",
+            ),
+            ("BOMB", "Z or /", "Clear all projectiles within bomb radius"),
             (
                 "PHASE",
                 "Shift Key",

@@ -76,16 +76,16 @@ impl Player {
 
     pub fn calculate_movement_vector(input: &Input) -> Vec2 {
         let mut direction = Vec2::ZERO;
-        if input.arrow_up {
+        if input.arrow_up || input.w_down {
             direction.y -= 1.0;
         }
-        if input.arrow_down {
+        if input.arrow_down || input.s_down {
             direction.y += 1.0;
         }
-        if input.arrow_left {
+        if input.arrow_left || input.a_down {
             direction.x -= 1.0;
         }
-        if input.arrow_right {
+        if input.arrow_right || input.d_down {
             direction.x += 1.0;
         }
         // normalize so diagonal movement isn't faster than axis-aligned
@@ -106,7 +106,7 @@ impl Player {
     ) {
         // detonate a bomb on key press if any are left
         // push an event that the event handler will deal with later
-        if input.z_pressed && state.bombs > 0 {
+        if (input.z_pressed || input.slash_pressed) && state.bombs > 0 {
             events.push(GameEvent::BombDetonated {
                 position: self.position,
             });
