@@ -173,7 +173,7 @@ impl World {
         // if a level-up window is active, it gets exclusive control;
         // the game stays frozen until the player picks a card
         if let Some(window) = self.level_window.as_mut() {
-            if let Some(index) = window.update(self.dt, input.screen_mouse, input.primary_pressed) {
+            if let Some(index) = window.update(self.dt, &input) {
                 let modifier = window.selected_modifier(index);
                 match modifier {
                     Modifier::DamageBoost(damage_boost) => {

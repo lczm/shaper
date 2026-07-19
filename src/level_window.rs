@@ -1,6 +1,7 @@
 use macroquad::prelude::*;
 
 use crate::collision::point_in_rect;
+use crate::input::Input;
 use crate::modifiers::Modifier;
 use crate::utils::wrap_text;
 
@@ -39,19 +40,29 @@ impl LevelWindow {
         }
     }
 
-    pub fn update(&mut self, _dt: f32, mouse: Vec2, primary_pressed: bool) -> Option<usize> {
+    pub fn update(&mut self, _dt: f32, input: &Input) -> Option<usize> {
         // check if mouse is hovering over any of the cards
         let rects = self.card_rects();
         self.hovered = None;
         for (i, r) in rects.iter().enumerate() {
-            if point_in_rect(mouse, *r) {
+            if point_in_rect(input.screen_mouse, *r) {
                 self.hovered = Some(i);
                 break;
             }
         }
 
+        if input.number1_pressed {
+            return Some(0);
+        }
+        if input.number2_pressed {
+            return Some(1);
+        }
+        if input.number3_pressed {
+            return Some(2);
+        }
+
         // if clicked while hovering then return the card
-        if primary_pressed {
+        if input.primary_pressed {
             if let Some(i) = self.hovered {
                 return Some(i);
             }
@@ -99,7 +110,7 @@ impl LevelWindow {
         );
 
         // subtitle
-        let subtitle = "Choose an upgrade";
+        let subtitle = "Click a card or press 1, 2, or 3";
         let sub_size = 24.0;
         let sub_dims = measure_text(subtitle, None, sub_size as u16, 1.0);
         draw_text(
@@ -191,6 +202,17 @@ impl LevelWindow {
             );
             y += desc_size * 1.4;
         }
+
+        let helper = format!("Click or press {}", index + 1);
+        let helper_size = 18.0;
+        let helper_dims = measure_text(&helper, None, helper_size as u16, 1.0);
+        draw_text(
+            &helper,
+            rect.x + (rect.w - helper_dims.width) / 2.0,
+            rect.y + rect.h - pad,
+            helper_size,
+            Color::new(0.65, 0.65, 0.68, 1.0),
+        );
     }
 
     // compute the 3 card rects in screen space. matches the layout in draw()

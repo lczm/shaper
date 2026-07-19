@@ -16,6 +16,9 @@ pub struct Input {
     pub escape_pressed: bool,
     pub f1_pressed: bool,
     pub f2_pressed: bool,
+    pub number1_pressed: bool,
+    pub number2_pressed: bool,
+    pub number3_pressed: bool,
 
     // mouse and left click
     pub mouse: Vec2,
@@ -40,6 +43,9 @@ impl Input {
             escape_pressed: is_key_pressed(KeyCode::Escape),
             f1_pressed: is_key_pressed(KeyCode::F1),
             f2_pressed: is_key_pressed(KeyCode::F2),
+            number1_pressed: is_key_pressed(KeyCode::Key1),
+            number2_pressed: is_key_pressed(KeyCode::Key2),
+            number3_pressed: is_key_pressed(KeyCode::Key3),
             mouse: camera.screen_to_world(mouse_position().into()),
             screen_mouse: mouse_position().into(),
             primary_pressed: is_mouse_button_pressed(MouseButton::Left),
