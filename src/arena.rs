@@ -149,7 +149,9 @@ impl Arena {
             self.player.dev_give_all_modifiers(state);
         }
 
-        self.player.update(dt, input, self.bounds, state, events);
+        let player_top_boundary = self.boss.player_boundary_y();
+        self.player
+            .update(dt, input, self.bounds, player_top_boundary, state, events);
 
         // boss may push some projectiles into the game state; it aims beams at the player
         self.boss
@@ -310,7 +312,8 @@ impl Arena {
             let spawn_pos =
                 self.boss.position + Vec2::new(angle.cos(), angle.sin()) * PROTO_SPAWN_OFFSET_X;
             let extra_health = (protos_killed as i32) * 100;
-            self.protos.push(Proto::new(spawn_pos, slot_idx, extra_health));
+            self.protos
+                .push(Proto::new(spawn_pos, slot_idx, extra_health));
         }
     }
 

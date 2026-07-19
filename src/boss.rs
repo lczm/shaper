@@ -561,6 +561,11 @@ impl Boss {
         (self.current_health, self.total_health)
     }
 
+    // used to keep the player below the boss
+    pub fn player_boundary_y(&self) -> Option<f32> {
+        (self.current_health > 0).then_some(self.position.y + self.rect.size.y / 2.0)
+    }
+
     // the trailing chip value while the drop is animating
     pub fn displayed_health(&self) -> f32 {
         self.displayed_health

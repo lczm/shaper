@@ -100,6 +100,7 @@ impl Player {
         dt: f32,
         input: &Input,
         bounds: Rect,
+        top_boundary_y: Option<f32>,
         state: &mut GameState,
         events: &mut Vec<GameEvent>,
     ) {
@@ -136,22 +137,31 @@ impl Player {
             self.trail.clear();
         }
 
-        // get the total inset from the bounds edge to the center of the player circle
-        let inset = self.circle.radius + self.circle.thickness / 2.0 + ARENA_BORDER_THICKNESS / 2.0;
-
-        // clamp player position within the arena
-        self.position.x = self
-            .position
-            .x
-            .clamp(bounds.x + inset, bounds.x + bounds.w - inset);
-        self.position.y = self
-            .position
-            .y
-            .clamp(bounds.y + inset, bounds.y + bounds.h - inset);
+        self.clamp_position(bounds, top_boundary_y);
 
         // continuously fire
         // this is the start point of all the projectiles that the player fires
         self.fire(dt, state);
+    }
+
+    fn clamp_position(&mut self, bounds: Rect, top_boundary_y: Option<f32>) {
+        // keep the whole player circle inside the arena border.
+        let shape_inset = self.circle.radius + self.circle.thickness / 2.0;
+        let arena_inset = shape_inset + ARENA_BORDER_THICKNESS / 2.0;
+        let min_x = bounds.x + arena_inset;
+        let max_x = bounds.x + bounds.w - arena_inset;
+        let arena_min_y = bounds.y + arena_inset;
+        let max_y = bounds.y + bounds.h - arena_inset;
+
+        // during the fight, the boss includes an additional horizontal boundary.
+        // include the player's outline so no part of it can cross above that line.
+        let min_y = top_boundary_y
+            .map(|boundary_y| arena_min_y.max(boundary_y + shape_inset))
+            .unwrap_or(arena_min_y)
+            .min(max_y);
+
+        self.position.x = self.position.x.clamp(min_x, max_x);
+        self.position.y = self.position.y.clamp(min_y, max_y);
     }
 
     // continuously shoot straight up on a fixed cadence
