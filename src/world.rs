@@ -3,16 +3,17 @@ use macroquad::prelude::*;
 use crate::arena::Arena;
 use crate::boss::BOSS_SPECIAL_HP_THRESHOLDS;
 use crate::constants::{
-    BACKGROUND, GAME_OVER_BANNER_DURATION, HEIGHT, LIGHTNING_EFFECT_DURATION, LOST_BANNER_DURATION,
-    MAX_FRAME_DT, RESET_BANNER_DURATION, SHAKE_TRAUMA_PER_HIT, WIDTH,
+    BACKGROUND, GAME_OVER_BANNER_DURATION, HEIGHT, LEVEL_WINDOW_INVULN_DURATION,
+    LIGHTNING_EFFECT_DURATION, LOST_BANNER_DURATION, MAX_FRAME_DT, RESET_BANNER_DURATION,
+    SHAKE_TRAUMA_PER_HIT, WIDTH,
 };
 use crate::dev_ui;
 use crate::gfx::{Post, Shaders, Shake};
 use crate::input::Input;
 use crate::level_window::LevelWindow;
 use crate::modifiers::Modifier;
-use crate::state::GameState;
 use crate::startup_window::StartupWindow;
+use crate::state::GameState;
 use crate::ui::Ui;
 
 #[derive(Clone, Copy)]
@@ -195,6 +196,9 @@ impl World {
                     }
                 }
 
+                self.arena
+                    .player_mut()
+                    .grant_invulnerability(LEVEL_WINDOW_INVULN_DURATION);
                 self.level_window = None;
             }
             return;

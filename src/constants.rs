@@ -123,6 +123,8 @@ pub const BEAM_ACTIVE_DURATION: f32 = 3.0;
 
 // invulnerability window granted to the player after any hit
 pub const HIT_INVULN_DURATION: f32 = 0.5;
+// invulnerability window granted after choosing an upgrade from the level window
+pub const LEVEL_WINDOW_INVULN_DURATION: f32 = 0.5;
 
 // screen shake (trauma-based): each hit bumps trauma, which decays every second.
 // the visible shake scales with trauma^2 so small bumps stay subtle.
