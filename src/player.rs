@@ -106,7 +106,7 @@ impl Player {
     ) {
         // detonate a bomb on key press if any are left
         // push an event that the event handler will deal with later
-        if (input.z_pressed || input.slash_pressed) && state.bombs > 0 {
+        if (input.z_pressed || input.l_pressed) && state.bombs > 0 {
             events.push(GameEvent::BombDetonated {
                 position: self.position,
             });

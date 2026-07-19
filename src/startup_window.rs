@@ -104,7 +104,7 @@ impl StartupWindow {
                 "Arrow Keys / WASD",
                 "Move player around the arena",
             ),
-            ("BOMB", "Z or /", "Clear all projectiles within bomb radius"),
+            ("BOMB", "Z or L", "Clear all projectiles within bomb radius"),
             (
                 "PHASE",
                 "Shift Key",

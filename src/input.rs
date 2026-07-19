@@ -14,7 +14,7 @@ pub struct Input {
     pub d_down: bool,
     pub shift_pressed: bool,
     pub z_pressed: bool,
-    pub slash_pressed: bool,
+    pub l_pressed: bool,
     pub tilde_pressed: bool,
     pub tab_pressed: bool,
     pub space_pressed: bool,
@@ -46,7 +46,7 @@ impl Input {
             shift_pressed: is_key_pressed(KeyCode::LeftShift)
                 || is_key_pressed(KeyCode::RightShift),
             z_pressed: is_key_pressed(KeyCode::Z),
-            slash_pressed: is_key_pressed(KeyCode::Slash),
+            l_pressed: is_key_pressed(KeyCode::L),
             tilde_pressed: is_key_pressed(KeyCode::GraveAccent),
             tab_pressed: is_key_pressed(KeyCode::Tab),
             space_pressed: is_key_pressed(KeyCode::Space),
