@@ -27,6 +27,17 @@ pub const BOSS_SPECIAL_PROJECTILE_COLOR: Color = Color::new(0.58, 0.24, 0.16, 1.
 // hud colors
 pub const UI_TEXT_COLOR: Color = Color::new(0.90, 0.92, 0.96, 1.0); // soft off-white
 
+// startup window colors
+pub const STARTUP_OVERLAY_COLOR: Color = Color::new(0.0, 0.0, 0.0, 0.75);
+pub const STARTUP_WINDOW_BG_COLOR: Color = Color::new(0.0, 0.0, 0.0, 1.0);
+pub const STARTUP_PRIMARY_COLOR: Color = Color::new(1.0, 1.0, 1.0, 1.0);
+pub const STARTUP_MUTED_TEXT_COLOR: Color = Color::new(0.75, 0.75, 0.78, 1.0);
+pub const STARTUP_DIVIDER_COLOR: Color = Color::new(0.35, 0.35, 0.40, 1.0);
+pub const STARTUP_ACTION_TEXT_COLOR: Color = Color::new(0.9, 0.7, 0.3, 1.0);
+pub const STARTUP_BUTTON_BG_COLOR: Color = Color::new(0.08, 0.08, 0.10, 1.0);
+pub const STARTUP_BUTTON_HOVER_BG_COLOR: Color = Color::new(0.18, 0.18, 0.22, 1.0);
+pub const STARTUP_BUTTON_BORDER_COLOR: Color = Color::new(0.55, 0.55, 0.60, 1.0);
+
 // gap from left window edge to arena border
 pub const ARENA_MARGIN_WIDTH: f32 = 80.0;
 // gap from top/bottom window edge to arena border

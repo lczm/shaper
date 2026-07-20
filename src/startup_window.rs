@@ -1,4 +1,11 @@
-use crate::collision::point_in_rect;
+use crate::{
+    collision::point_in_rect,
+    constants::{
+        STARTUP_ACTION_TEXT_COLOR, STARTUP_BUTTON_BG_COLOR, STARTUP_BUTTON_BORDER_COLOR,
+        STARTUP_BUTTON_HOVER_BG_COLOR, STARTUP_DIVIDER_COLOR, STARTUP_MUTED_TEXT_COLOR,
+        STARTUP_OVERLAY_COLOR, STARTUP_PRIMARY_COLOR, STARTUP_WINDOW_BG_COLOR,
+    },
+};
 use macroquad::prelude::*;
 
 pub struct StartupWindow {
@@ -29,9 +36,7 @@ impl StartupWindow {
 
         self.button_hovered = point_in_rect(mouse, btn_rect);
 
-        if (primary_pressed && self.button_hovered)
-            || is_key_pressed(KeyCode::Enter)
-        {
+        if (primary_pressed && self.button_hovered) || is_key_pressed(KeyCode::Enter) {
             return true;
         }
 
@@ -45,8 +50,7 @@ impl StartupWindow {
         let sh = screen_height();
 
         // dim background
-        let dim = Color::new(0.0, 0.0, 0.0, 0.75);
-        draw_rectangle(0.0, 0.0, sw, sh, dim);
+        draw_rectangle(0.0, 0.0, sw, sh, STARTUP_OVERLAY_COLOR);
 
         // window rect
         let win_w = sw * 0.8;
@@ -55,8 +59,8 @@ impl StartupWindow {
         let win_y = (sh - win_h) / 2.0;
 
         // body & border
-        draw_rectangle(win_x, win_y, win_w, win_h, BLACK);
-        draw_rectangle_lines(win_x, win_y, win_w, win_h, 4.0, WHITE);
+        draw_rectangle(win_x, win_y, win_w, win_h, STARTUP_WINDOW_BG_COLOR);
+        draw_rectangle_lines(win_x, win_y, win_w, win_h, 4.0, STARTUP_PRIMARY_COLOR);
 
         // title
         let title = "SHAPER";
@@ -67,7 +71,7 @@ impl StartupWindow {
             win_x + (win_w - title_dims.width) / 2.0,
             win_y + 80.0,
             title_size,
-            WHITE,
+            STARTUP_PRIMARY_COLOR,
         );
 
         // subtitle
@@ -79,7 +83,7 @@ impl StartupWindow {
             win_x + (win_w - sub_dims.width) / 2.0,
             win_y + 115.0,
             sub_size,
-            Color::new(0.75, 0.75, 0.78, 1.0),
+            STARTUP_MUTED_TEXT_COLOR,
         );
 
         // divider
@@ -90,7 +94,7 @@ impl StartupWindow {
             win_x + win_w - 50.0,
             line_y,
             1.0,
-            Color::new(0.35, 0.35, 0.40, 1.0),
+            STARTUP_DIVIDER_COLOR,
         );
 
         // controls listing
@@ -122,17 +126,23 @@ impl StartupWindow {
                 win_x + win_w * 0.25 - action_dims.width,
                 y_pos,
                 text_size,
-                Color::new(0.9, 0.7, 0.3, 1.0),
+                STARTUP_ACTION_TEXT_COLOR,
             );
 
-            draw_text(key, win_x + win_w * 0.28, y_pos, text_size, WHITE);
+            draw_text(
+                key,
+                win_x + win_w * 0.28,
+                y_pos,
+                text_size,
+                STARTUP_PRIMARY_COLOR,
+            );
 
             draw_text(
                 desc,
-                win_x + win_w * 0.45,
+                win_x + win_w * 0.48,
                 y_pos,
                 text_size - 2.0,
-                Color::new(0.75, 0.75, 0.78, 1.0),
+                STARTUP_MUTED_TEXT_COLOR,
             );
         }
 
@@ -143,14 +153,14 @@ impl StartupWindow {
         let btn_y = win_y + win_h - 100.0;
 
         let btn_bg = if self.button_hovered {
-            Color::new(0.18, 0.18, 0.22, 1.0)
+            STARTUP_BUTTON_HOVER_BG_COLOR
         } else {
-            Color::new(0.08, 0.08, 0.10, 1.0)
+            STARTUP_BUTTON_BG_COLOR
         };
         let btn_border = if self.button_hovered {
-            WHITE
+            STARTUP_PRIMARY_COLOR
         } else {
-            Color::new(0.55, 0.55, 0.60, 1.0)
+            STARTUP_BUTTON_BORDER_COLOR
         };
 
         draw_rectangle(btn_x, btn_y, btn_w, btn_h, btn_bg);
@@ -164,7 +174,7 @@ impl StartupWindow {
             btn_x + (btn_w - btn_text_dims.width) / 2.0,
             btn_y + btn_h / 2.0 + 7.0,
             btn_text_size,
-            WHITE,
+            STARTUP_PRIMARY_COLOR,
         );
     }
 }
